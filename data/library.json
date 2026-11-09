@@ -858,6 +858,56 @@
       },
       "createdAt": "2026-11-09T00:06:13.242Z",
       "updatedAt": "2026-11-09T00:25:11.871Z"
+    },
+    {
+      "id": "839bfefe-f0e9-489f-a6bb-626a6a123866",
+      "slug": "dracula",
+      "title": "Dracula",
+      "originalTitle": null,
+      "author": "Bram Stoker",
+      "authorNationality": "Irlandaise",
+      "originalLanguage": "Anglais",
+      "edition": null,
+      "publisher": null,
+      "year": 1897,
+      "pages": null,
+      "isbn": null,
+      "coverUrl": null,
+      "color": "#4B1E2E",
+      "genres": [
+        "Roman gothique",
+        "Fantastique",
+        "Roman épistolaire"
+      ],
+      "themes": [],
+      "categoryIds": [
+        "cat-litterature-classique",
+        "cat-fantasy-imaginaire"
+      ],
+      "summary": "",
+      "spoilerAnalysis": "",
+      "summarySpoilers": false,
+      "editorial": "",
+      "status": "reading",
+      "rating": null,
+      "readStartedAt": null,
+      "readFinishedAt": null,
+      "visibility": "published",
+      "driveRefs": [
+        "https://docs.google.com/document/d/10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws/edit"
+      ],
+      "sources": {
+        "title": "manual",
+        "author": "manual",
+        "status": "manual",
+        "year": "wikidata",
+        "authorNationality": "scryptorium",
+        "originalLanguage": "scryptorium",
+        "genres": "scryptorium",
+        "categoryIds": "auto"
+      },
+      "createdAt": "2026-11-09T23:20:41.133Z",
+      "updatedAt": "2026-11-09T23:20:41.133Z"
     }
   ],
   "categories": [
