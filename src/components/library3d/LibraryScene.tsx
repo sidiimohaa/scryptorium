@@ -26,6 +26,10 @@ type Props = {
   onView: (v: View) => void;
   onIntroDone: () => void;
   onDecline: () => void;
+  /** Arrivée depuis la porte de l'accueil : portes déjà ouvertes, caméra sur le seuil. */
+  entrance?: boolean;
+  /** Appelé au premier rendu de la scène (pour lever le voile de lumière). */
+  onReady?: () => void;
 };
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -51,14 +55,19 @@ export default function LibraryScene(props: Props) {
   );
 }
 
-function Room({ shelves, view, lowPower, onView, onIntroDone }: Props) {
+function Room({ shelves, view, lowPower, onView, onIntroDone, entrance, onReady }: Props) {
   const fonts = useMemo(() => resolveFonts(), []);
   const room = useMemo(() => computeRoom(shelves.length), [shelves.length]);
-  const reveal = useRef(view.kind === "intro" ? 0 : 1);
+  const reveal = useRef(entrance ? 0.6 : view.kind === "intro" ? 0 : 1);
+  const ready = useRef(false);
   const intro = useRef({ start: -1, done: view.kind !== "intro" });
   const doorAngle = useRef(view.kind === "intro" ? 0 : 1);
 
   useFrame((state, dt) => {
+    if (!ready.current) {
+      ready.current = true;
+      onReady?.();
+    }
     if (!intro.current.done) {
       if (intro.current.start < 0) intro.current.start = state.clock.elapsedTime;
       const t = state.clock.elapsedTime - intro.current.start;
@@ -75,7 +84,7 @@ function Room({ shelves, view, lowPower, onView, onIntroDone }: Props) {
 
   return (
     <>
-      <CameraRig view={view} room={room} />
+      <CameraRig view={view} room={room} entrance={entrance} />
       <Lights reveal={reveal} lowPower={lowPower} />
       <Architecture room={room} doorAngle={doorAngle} lowPower={lowPower} />
       <ReadingDesk />
@@ -101,17 +110,18 @@ function Room({ shelves, view, lowPower, onView, onIntroDone }: Props) {
 
 /* ─── Camera ─────────────────────────────────────────────────────────── */
 
-function CameraRig({ view, room }: { view: View; room: ReturnType<typeof computeRoom> }) {
+function CameraRig({ view, room, entrance }: { view: View; room: ReturnType<typeof computeRoom>; entrance?: boolean }) {
   const { camera, pointer, size } = useThree();
   const look = useRef(new THREE.Vector3(0, 2.3, 0));
   const targetPos = useMemo(() => new THREE.Vector3(), []);
   const targetLook = useMemo(() => new THREE.Vector3(), []);
 
   useLayoutEffect(() => {
-    camera.position.set(0, 2.3, room.front + 8);
+    // Depuis la porte de l'accueil, on démarre déjà sur le seuil, regard vers la salle.
+    camera.position.set(0, 2.3, room.front + (entrance ? 0.6 : 8));
     look.current.set(0, 2.3, room.front - 4);
     camera.lookAt(look.current);
-  }, [camera, room.front]);
+  }, [camera, room.front, entrance]);
 
   useFrame((_, dt) => {
     let lambda = 2.2;
@@ -160,16 +170,19 @@ function Lights({ reveal, lowPower }: { reveal: React.RefObject<number>; lowPowe
   const lamps = useRef<(THREE.PointLight | null)[]>([]);
   const lampPos = useMemo(() => {
     const zs = [-6, 2];
-    return lowPower ? [[0, 6.5, -4] as const] : zs.flatMap((z) => [[-7, 6.8, z] as const, [7, 6.8, z] as const]);
+    return lowPower ? [[0, 6.2, -4] as const] : zs.flatMap((z) => [[-7, 6.2, z] as const, [7, 6.2, z] as const]);
   }, [lowPower]);
 
   useFrame(({ clock }) => {
     const r = reveal.current ?? 1;
-    const flicker = 1 + Math.sin(clock.elapsedTime * 7.3) * 0.03 + Math.sin(clock.elapsedTime * 13.1) * 0.02;
+    const t = clock.elapsedTime;
+    const flicker = 1 + Math.sin(t * 7.3) * 0.03 + Math.sin(t * 13.1) * 0.02;
+    // Une chandelle vacille davantage qu'un lustre de huit bougies.
+    const candle = 1 + Math.sin(t * 9.7) * 0.07 + Math.sin(t * 23.3) * 0.05 + Math.sin(t * 3.1) * 0.04;
     if (amb.current) amb.current.intensity = 0.55 * r + 0.03;
     if (hemi.current) hemi.current.intensity = 0.7 * r;
     if (win.current) win.current.intensity = 1.1 * r;
-    if (desk.current) desk.current.intensity = 9 * r * flicker;
+    if (desk.current) desk.current.intensity = 5.5 * r * candle;
     lamps.current.forEach((l) => l && (l.intensity = 14 * r * flicker));
   });
 
@@ -178,35 +191,146 @@ function Lights({ reveal, lowPower }: { reveal: React.RefObject<number>; lowPowe
       <ambientLight ref={amb} color="#ffdcb0" />
       <hemisphereLight ref={hemi} args={["#f3d9a6", "#1a0f0a"]} />
       <directionalLight ref={win} color="#ffe4b8" position={[-14, 11, 2]} />
-      <pointLight ref={desk} color="#ffb766" position={[0.55, 1.75, 1.0]} distance={9} decay={1.6} />
+      {/* Chandelle du bureau (le bureau est centré en z = 1) */}
+      <pointLight ref={desk} color="#ff9e4a" position={[0.72, 1.32, 0.82]} distance={7} decay={1.6} />
       {lampPos.map((p, i) => (
         <group key={i} position={p as unknown as [number, number, number]}>
           <pointLight ref={(el) => { lamps.current[i] = el; }} color="#ffc27a" distance={16} decay={1.5} />
-          <Chandelier />
+          <Chandelier drop={12 - p[1]} seed={i} />
         </group>
       ))}
     </>
   );
 }
 
-function Chandelier() {
+/** Flamme de bougie : cœur clair, flamme orangée, halo additif ; vacille et ondule. */
+function Flame({ seed = 0, scale = 1 }: { seed?: number; scale?: number }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame(({ clock }) => {
+    const g = ref.current;
+    if (!g) return;
+    const t = clock.elapsedTime + seed * 1.37;
+    const f = 1 + Math.sin(t * 11.3) * 0.08 + Math.sin(t * 27.1) * 0.05;
+    g.scale.set(scale * (1 - (f - 1) * 0.5), scale * f, scale * (1 - (f - 1) * 0.5));
+    g.rotation.z = Math.sin(t * 2.3) * 0.08;
+  });
+  return (
+    <group ref={ref}>
+      <mesh position={[0, 0.032, 0]} scale={[1, 2.1, 1]}>
+        <sphereGeometry args={[0.016, 10, 10]} />
+        <meshBasicMaterial color="#ffb347" toneMapped={false} transparent opacity={0.92} />
+      </mesh>
+      <mesh position={[0, 0.026, 0]} scale={[1, 1.8, 1]}>
+        <sphereGeometry args={[0.008, 8, 8]} />
+        <meshBasicMaterial color="#fff6d8" toneMapped={false} />
+      </mesh>
+      <mesh position={[0, 0.035, 0]}>
+        <sphereGeometry args={[0.07, 12, 12]} />
+        <meshBasicMaterial color="#ffae55" transparent opacity={0.14} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
+/** Bougie de cire : corps, coulure, mèche et flamme. */
+function Candle({ height = 0.18, radius = 0.03, seed = 0 }: { height?: number; radius?: number; seed?: number }) {
   return (
     <group>
-      <mesh position={[0, 2.2, 0]}>
-        <cylinderGeometry args={[0.012, 0.012, 4.4, 6]} />
-        <meshStandardMaterial color="#6d5634" metalness={0.8} roughness={0.4} />
+      <mesh position={[0, height / 2, 0]}>
+        <cylinderGeometry args={[radius * 0.94, radius, height, 14]} />
+        <meshStandardMaterial color="#efe3c8" roughness={0.55} emissive="#ffb766" emissiveIntensity={0.06} />
+      </mesh>
+      <mesh position={[radius * 0.55, height * 0.78, 0]} scale={[0.6, 1.6, 0.6]}>
+        <sphereGeometry args={[radius * 0.45, 8, 8]} />
+        <meshStandardMaterial color="#f3e9d2" roughness={0.5} />
+      </mesh>
+      <mesh position={[0, height + 0.008, 0]}>
+        <cylinderGeometry args={[0.002, 0.002, 0.016, 4]} />
+        <meshBasicMaterial color="#1a1410" />
+      </mesh>
+      <group position={[0, height + 0.012, 0]}>
+        <Flame seed={seed} />
+      </group>
+    </group>
+  );
+}
+
+const IRON = { color: "#2b2522", metalness: 0.75, roughness: 0.45 } as const;
+
+/**
+ * Lustre médiéval : couronne de fer forgé à huit bougies, suspendue par trois chaînes
+ * réunies en une seule jusqu'au plafond (`drop` = distance au plafond).
+ */
+function Chandelier({ drop, seed = 0 }: { drop: number; seed?: number }) {
+  const R = 0.62;
+  const hub = 1.15;
+  const chains = useMemo(
+    () =>
+      [0, 1, 2].map((k) => {
+        const a = (k / 3) * Math.PI * 2 + Math.PI / 6;
+        const from = new THREE.Vector3(Math.cos(a) * R, 0.02, Math.sin(a) * R);
+        const to = new THREE.Vector3(0, hub, 0);
+        const dir = to.clone().sub(from);
+        const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+        return { mid: from.clone().add(to).multiplyScalar(0.5), len: dir.length(), q };
+      }),
+    [],
+  );
+  const candles = 8;
+  return (
+    <group>
+      {/* chaîne principale jusqu'au plafond */}
+      <mesh position={[0, hub + (drop - hub) / 2, 0]}>
+        <cylinderGeometry args={[0.014, 0.014, drop - hub, 6]} />
+        <meshStandardMaterial {...IRON} />
+      </mesh>
+      <mesh position={[0, hub, 0]}>
+        <sphereGeometry args={[0.045, 12, 12]} />
+        <meshStandardMaterial {...IRON} />
+      </mesh>
+      {chains.map((c, i) => (
+        <mesh key={i} position={c.mid} quaternion={c.q}>
+          <cylinderGeometry args={[0.009, 0.009, c.len, 5]} />
+          <meshStandardMaterial {...IRON} />
+        </mesh>
+      ))}
+      {/* couronne de fer, moyeu et rayons */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[R, 0.03, 10, 48]} />
+        <meshStandardMaterial {...IRON} />
+      </mesh>
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -0.06, 0]}>
+        <torusGeometry args={[R * 0.82, 0.014, 8, 40]} />
+        <meshStandardMaterial {...IRON} />
       </mesh>
       <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.5, 0.025, 8, 32]} />
-        <meshStandardMaterial color="#b08d57" metalness={0.9} roughness={0.3} />
+        <torusGeometry args={[0.13, 0.025, 8, 24]} />
+        <meshStandardMaterial {...IRON} />
       </mesh>
-      {Array.from({ length: 6 }, (_, i) => {
-        const a = (i / 6) * Math.PI * 2;
+      {[0, 1, 2, 3].map((k) => (
+        <mesh key={k} rotation={[0, (k / 4) * Math.PI, 0]}>
+          <boxGeometry args={[R * 2, 0.02, 0.025]} />
+          <meshStandardMaterial {...IRON} />
+        </mesh>
+      ))}
+      {/* fleuron pendant sous le moyeu */}
+      <mesh position={[0, -0.16, 0]} rotation={[Math.PI, 0, 0]}>
+        <coneGeometry args={[0.05, 0.22, 10]} />
+        <meshStandardMaterial {...IRON} />
+      </mesh>
+      {/* bougies et coupelles */}
+      {Array.from({ length: candles }, (_, i) => {
+        const a = (i / candles) * Math.PI * 2;
         return (
-          <mesh key={i} position={[Math.cos(a) * 0.5, 0.1, Math.sin(a) * 0.5]}>
-            <sphereGeometry args={[0.055, 10, 10]} />
-            <meshBasicMaterial color="#ffd9a0" toneMapped={false} />
-          </mesh>
+          <group key={i} position={[Math.cos(a) * R, 0.03, Math.sin(a) * R]}>
+            <mesh>
+              <cylinderGeometry args={[0.055, 0.04, 0.025, 12]} />
+              <meshStandardMaterial {...IRON} />
+            </mesh>
+            <group position={[0, 0.012, 0]}>
+              <Candle height={0.15 + ((i * 7 + seed * 3) % 5) * 0.012} seed={seed * 8 + i} />
+            </group>
+          </group>
         );
       })}
     </group>
@@ -379,24 +503,37 @@ function ReadingDesk() {
           <meshStandardMaterial color="#ecdfc4" roughness={0.95} side={THREE.DoubleSide} />
         </mesh>
       ))}
-      {/* brass lamp */}
-      <group position={[0.75, 0.82, -0.2]}>
-        <mesh position={[0, 0.02, 0]}>
-          <cylinderGeometry args={[0.14, 0.16, 0.04, 24]} />
-          <meshStandardMaterial color="#b08d57" metalness={0.9} roughness={0.25} />
+      {/* chandelier de laiton et sa bougie */}
+      <group position={[0.72, 0.82, -0.18]}>
+        <mesh position={[0, 0.01, 0]}>
+          <cylinderGeometry args={[0.09, 0.1, 0.02, 24]} />
+          <meshStandardMaterial color="#b08d57" metalness={0.9} roughness={0.28} />
         </mesh>
-        <mesh position={[0, 0.4, 0]}>
-          <cylinderGeometry args={[0.015, 0.015, 0.76, 8]} />
-          <meshStandardMaterial color="#b08d57" metalness={0.9} roughness={0.25} />
+        <mesh position={[0, 0.07, 0]}>
+          <cylinderGeometry args={[0.014, 0.02, 0.11, 10]} />
+          <meshStandardMaterial color="#b08d57" metalness={0.9} roughness={0.28} />
         </mesh>
-        <mesh position={[-0.12, 0.82, 0.12]} rotation={[0.3, 0, 0.35]}>
-          <coneGeometry args={[0.2, 0.22, 24, 1, true]} />
-          <meshStandardMaterial color="#1f4030" metalness={0.3} roughness={0.4} side={THREE.DoubleSide} emissive="#ffb766" emissiveIntensity={0.08} />
+        <mesh position={[0, 0.13, 0]}>
+          <cylinderGeometry args={[0.055, 0.03, 0.02, 16]} />
+          <meshStandardMaterial color="#b08d57" metalness={0.9} roughness={0.28} />
         </mesh>
-        <mesh position={[-0.15, 0.74, 0.15]}>
-          <sphereGeometry args={[0.05, 12, 12]} />
-          <meshBasicMaterial color="#ffd9a0" toneMapped={false} />
+        <mesh position={[0.07, 0.07, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.035, 0.007, 6, 16, Math.PI * 1.2]} />
+          <meshStandardMaterial color="#b08d57" metalness={0.9} roughness={0.28} />
         </mesh>
+        <group position={[0, 0.14, 0]}>
+          <Candle height={0.22} radius={0.028} seed={41} />
+        </group>
+      </group>
+      {/* bougie entamée dans une coupelle */}
+      <group position={[0.9, 0.82, 0.02]}>
+        <mesh position={[0, 0.008, 0]}>
+          <cylinderGeometry args={[0.055, 0.06, 0.016, 16]} />
+          <meshStandardMaterial color="#8a6a3a" metalness={0.8} roughness={0.35} />
+        </mesh>
+        <group position={[0, 0.016, 0]}>
+          <Candle height={0.07} radius={0.032} seed={57} />
+        </group>
       </group>
       {/* chair */}
       <group position={[0, 0, 1.1]}>

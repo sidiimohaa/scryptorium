@@ -34,17 +34,21 @@ export function LibraryExperience({
   initialBook,
   initialShelf,
   skipIntro,
+  entrance = false,
 }: {
   shelves: SceneShelf[];
   books: Record<string, BookInfo>;
   initialBook?: string;
   initialShelf?: string;
   skipIntro?: boolean;
+  /** Arrivée par la porte de l'accueil : la salle reprend le voile de lumière, sans rejouer d'ouverture. */
+  entrance?: boolean;
 }) {
   const [support, setSupport] = useState<"checking" | "ok" | "none">("checking");
   const [lowPower, setLowPower] = useState(false);
   const [fontsReady, setFontsReady] = useState(false);
   const [view, setView] = useState<View>({ kind: "intro" });
+  const [veil, setVeil] = useState(entrance);
   const pending = useRef<View | null>(null);
 
   // Resolve deep links (?livre= / ?rayon=) into a target view.
@@ -75,10 +79,24 @@ export function LibraryExperience({
     try {
       seen = sessionStorage.getItem("scr-hall") === "1";
     } catch {}
-    if (skipIntro || reduced || seen) setView(deepLink ?? { kind: "hall" });
+    if (entrance) {
+      try {
+        sessionStorage.setItem("scr-hall", "1");
+      } catch {}
+      // Le paramètre d'arrivée n'a de sens qu'une fois : un rechargement ne rejoue pas la traversée.
+      const url = new URL(window.location.href);
+      url.searchParams.delete("entree");
+      window.history.replaceState(window.history.state, "", url.pathname + url.search);
+      setView(deepLink ?? { kind: "hall" });
+    } else if (skipIntro || reduced || seen) setView(deepLink ?? { kind: "hall" });
     else pending.current = deepLink;
+    if (!hasWebGL()) setVeil(false);
     document.fonts.ready.then(() => setFontsReady(true));
-  }, [deepLink, skipIntro]);
+  }, [deepLink, skipIntro, entrance]);
+
+  const onReady = useCallback(() => {
+    setTimeout(() => setVeil(false), 120);
+  }, []);
 
   const onIntroDone = useCallback(() => {
     try {
@@ -133,7 +151,16 @@ export function LibraryExperience({
     <div className="fixed inset-0 bg-[#0b0908]">
       <div className="absolute inset-0" aria-hidden>
         {support === "ok" && fontsReady && (
-          <LibraryScene shelves={shelves} view={view} lowPower={lowPower} onView={setView} onIntroDone={onIntroDone} onDecline={() => setLowPower(true)} />
+          <LibraryScene
+            shelves={shelves}
+            view={view}
+            lowPower={lowPower}
+            onView={setView}
+            onIntroDone={onIntroDone}
+            onDecline={() => setLowPower(true)}
+            entrance={entrance}
+            onReady={onReady}
+          />
         )}
       </div>
 
@@ -227,6 +254,15 @@ export function LibraryExperience({
           </ul>
         </div>
       </nav>
+
+      {/* Voile de lumière venu de la porte de l'accueil, levé au premier rendu de la salle */}
+      {entrance && (
+        <div
+          aria-hidden
+          className="entrance-veil pointer-events-none absolute inset-0 z-[70] transition-opacity duration-[1800ms] ease-out"
+          style={{ opacity: veil ? 1 : 0 }}
+        />
+      )}
 
       {(!fontsReady || support === "checking") && (
         <div className="absolute inset-0 flex items-center justify-center">

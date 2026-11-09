@@ -56,6 +56,7 @@ export default async function LibraryPage({ searchParams }: PageProps<"/biblioth
         initialBook={one(sp.livre)}
         initialShelf={one(sp.rayon)}
         skipIntro={one(sp.intro) === "0"}
+        entrance={one(sp.entree) === "porte"}
       />
     </>
   );

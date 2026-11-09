@@ -292,7 +292,7 @@ html[data-motion="reduced"] *, html[data-motion="reduced"] *::before, html[data-
   }
 
   .threshold-stage {
-    width: min(56vw, calc(min(38svh, 440px) * 0.62));
+    width: min(56vw, calc(min(36svh, 440px) * 0.62));
     aspect-ratio: 0.62;
   }
 
@@ -417,29 +417,8 @@ html[data-motion="reduced"] *, html[data-motion="reduced"] *::before, html[data-
     animation: mote 13s linear infinite;
   }
   .threshold[data-phase="dark"] .threshold-mote { animation-play-state: paused; visibility: hidden; }
-
-  /* Candle sconces */
-  .threshold-flame {
-    border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
-    background: radial-gradient(circle at 50% 70%, #fff6d8 0 25%, #ffc96b 45%, #ff8a2a 75%, transparent 80%);
-    transform-origin: 50% 90%;
-    opacity: 0;
-    transition: opacity 0.9s var(--ease-quill);
-  }
-  .threshold-glow {
-    background: radial-gradient(closest-side, rgb(255 190 110 / 0.28), transparent);
-    opacity: 0;
-    transition: opacity 1.4s var(--ease-quill);
-  }
-  .threshold-sconce[data-lit="true"] .threshold-flame { opacity: 1; animation: flame 2.6s ease-in-out infinite; }
-  .threshold-sconce[data-lit="true"] .threshold-glow { opacity: 1; animation: candle 4s ease-in-out infinite; }
 }
 
-@keyframes flame {
-  0%, 100% { transform: scale(1, 1) rotate(-1deg); }
-  30% { transform: scale(0.94, 1.08) rotate(2deg); }
-  60% { transform: scale(1.04, 0.95) rotate(-2deg); }
-}
 @keyframes seam {
   0%, 100% { opacity: 0.85; }
   50% { opacity: 0.55; }
@@ -449,4 +428,66 @@ html[data-motion="reduced"] *, html[data-motion="reduced"] *::before, html[data-
   15% { opacity: 0.7; }
   85% { opacity: 0.5; }
   100% { transform: translate(18px, -140px); opacity: 0; }
+}
+
+/* ═══ Le seuil — vitraux et traversée ═══════════════════════════════════ */
+@layer components {
+  .threshold-camera {
+    transition: transform 1.9s cubic-bezier(0.55, 0, 0.25, 1), filter 1.9s ease-in;
+    will-change: transform;
+  }
+  .threshold[data-phase="opening"] .threshold-camera { transform: scale(4.2); }
+
+  .threshold-window {
+    height: calc(min(36svh, 440px) * 0.94);
+    aspect-ratio: 140 / 320;
+    margin-bottom: calc(min(36svh, 440px) * 0.06);
+  }
+  .threshold-glass {
+    filter: brightness(0.16) saturate(0.5);
+    transition: filter 2.6s var(--ease-quill);
+  }
+  .threshold-window[data-lit="true"] .threshold-glass {
+    filter: brightness(1.04) saturate(1.12) drop-shadow(0 0 18px rgb(70 100 190 / 0.28)) drop-shadow(0 0 36px rgb(190 110 50 / 0.16));
+  }
+  .threshold[data-phase="opening"] .threshold-window .threshold-glass {
+    filter: brightness(1.5) saturate(1.2) drop-shadow(0 0 30px rgb(255 210 140 / 0.45));
+  }
+  .vitrail-sun { animation: vitrail-shimmer 9s ease-in-out infinite; }
+  .vitrail-flame { animation: vitrail-flicker 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+
+  .threshold-pool {
+    background:
+      radial-gradient(closest-side at 35% 50%, rgb(60 90 190 / 0.35), transparent),
+      radial-gradient(closest-side at 60% 45%, rgb(170 40 50 / 0.3), transparent),
+      radial-gradient(closest-side at 50% 60%, rgb(230 170 70 / 0.25), transparent);
+    filter: blur(8px);
+    opacity: 0;
+    transition: opacity 2.6s var(--ease-quill);
+  }
+  .threshold-window[data-lit="true"] .threshold-pool { opacity: 1; }
+
+  /* Voile lumineux : même teinte que celui qui accueille dans la salle 3D */
+  .threshold-veil, .entrance-veil {
+    background: radial-gradient(80% 70% at 50% 55%, #fff4dc 0%, #f2cf8f 38%, #a8692f 78%, #4a2a16 100%);
+  }
+  .threshold-veil { opacity: 0; transition: opacity 0.75s ease-in 1.15s; }
+  .threshold[data-phase="opening"] .threshold-veil { opacity: 1; }
+
+  @media (max-width: 640px) {
+    .threshold-window {
+      height: calc(min(36svh, 440px) * 0.62);
+      margin-bottom: calc(min(36svh, 440px) * 0.1);
+    }
+  }
+}
+
+@keyframes vitrail-shimmer {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+@keyframes vitrail-flicker {
+  0%, 100% { transform: scale(1, 1); opacity: 1; }
+  35% { transform: scale(0.92, 1.08); opacity: 0.85; }
+  70% { transform: scale(1.05, 0.95); opacity: 0.95; }
 }

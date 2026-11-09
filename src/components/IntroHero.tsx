@@ -1,28 +1,33 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Arms } from "./Emblem";
+import { StainedGlass } from "./StainedGlass";
 
-type Phase = "dark" | "candles" | "inscription" | "ready" | "opening";
+type Phase = "dark" | "glow" | "inscription" | "ready" | "opening";
 
 const reducedMotion = () =>
   document.documentElement.dataset.motion === "reduced" || matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /**
- * Le seuil de SCRYPTORIUM : une porte cochère, rien d'autre.
- * Noir → les bougies s'allument → l'inscription apparaît → la lumière filtre sous les vantaux.
- * Les portes s'entrouvrent au survol ; un clic les pousse et conduit dans la salle.
+ * Le seuil de SCRYPTORIUM : une porte cochère entre deux vitraux de scriptorium.
+ * Noir → les vitraux s'allument → les armoiries apparaissent → la lumière filtre sous les vantaux.
+ * Les portes s'entrouvrent au survol ; un clic les pousse : la caméra avance dans l'embrasure,
+ * la lumière de la salle envahit l'écran et l'on se retrouve à l'intérieur (la salle 3D reprend
+ * ce même voile de lumière, sans rejouer d'ouverture de portes).
  * Séquence complète à la première visite, instantanée ensuite (rejouable).
  */
 export function IntroHero() {
   const [phase, setPhase] = useState<Phase>("dark");
   const router = useRouter();
+  const camera = useRef<HTMLDivElement>(null);
+  const door = useRef<HTMLButtonElement>(null);
 
   const play = () => {
     setPhase("dark");
     const t = [
-      setTimeout(() => setPhase("candles"), 350),
+      setTimeout(() => setPhase("glow"), 350),
       setTimeout(() => setPhase("inscription"), 1500),
       setTimeout(() => setPhase("ready"), 2900),
     ];
@@ -50,11 +55,17 @@ export function IntroHero() {
   const enter = () => {
     if (phase === "opening") return;
     if (reducedMotion()) return router.push("/bibliotheque?intro=0");
+    // La « caméra » avance vers le centre exact de l'embrasure.
+    const cam = camera.current?.getBoundingClientRect();
+    const d = door.current?.getBoundingClientRect();
+    if (cam && d && camera.current) {
+      camera.current.style.transformOrigin = `${d.left + d.width / 2 - cam.left}px ${d.top + d.height * 0.55 - cam.top}px`;
+    }
     setPhase("opening");
-    setTimeout(() => router.push("/bibliotheque"), 1700);
+    setTimeout(() => router.push("/bibliotheque?entree=porte"), 1900);
   };
 
-  const candles = phase !== "dark";
+  const lit = phase !== "dark";
   const inscription = phase === "inscription" || phase === "ready" || phase === "opening";
   const ready = phase === "ready" || phase === "opening";
   const opening = phase === "opening";
@@ -68,12 +79,13 @@ export function IntroHero() {
       {/* Wall: dark wainscot + vignette */}
       <div aria-hidden className="threshold-wall absolute inset-0 -z-10" />
 
-      {/* Inscription carved above the door */}
+      <div ref={camera} className="threshold-camera relative z-10 flex flex-col items-center">
+      {/* Armoiries et inscription au-dessus de la porte */}
       <header
         className="relative z-10 flex flex-col items-center text-center transition-all duration-[1400ms] ease-[var(--ease-quill)]"
         style={{ opacity: inscription && !opening ? 1 : 0, transform: inscription ? "none" : "translateY(-10px)", filter: inscription ? "none" : "blur(6px)" }}
       >
-        <Arms className="threshold-arms h-[clamp(6.5rem,18svh,12rem)] w-auto" />
+        <Arms preload className="threshold-arms h-[clamp(6rem,17svh,13rem)] w-auto" />
         <h1 className="threshold-title display mt-1 text-[clamp(1.6rem,4.8vw,3.4rem)] tracking-[0.3em]" style={{ paddingLeft: "0.3em" }}>
           SCRYPTORIUM
         </h1>
@@ -84,13 +96,13 @@ export function IntroHero() {
         </p>
       </header>
 
-      {/* The doorway, flanked by two candle sconces */}
-      <div className="relative z-10 mt-[clamp(1.6rem,5svh,3rem)] flex items-end justify-center gap-[clamp(1rem,6vw,4.5rem)]">
-        <Sconce lit={candles} delay={0} />
+      {/* La porte, entre deux vitraux */}
+      <div className="relative z-10 mt-[clamp(1.6rem,5svh,3rem)] flex items-end justify-center gap-[clamp(0.6rem,4vw,3.5rem)]">
+        <Window scene="copiste" lit={lit} delay={0} />
 
         <div
           className="threshold-stage relative transition-transform duration-[1700ms] ease-[var(--ease-velvet)]"
-          style={{ transform: opening ? "scale(2.6) translateY(6%)" : "none" }}
+
         >
           {/* Stone archivolt */}
           <div aria-hidden className="threshold-arch absolute -inset-x-[11%] -top-[8%] bottom-0">
@@ -102,6 +114,7 @@ export function IntroHero() {
 
           {/* Doorway (the button) */}
           <button
+            ref={door}
             type="button"
             onClick={enter}
             disabled={!ready}
@@ -153,8 +166,12 @@ export function IntroHero() {
           </div>
         </div>
 
-        <Sconce lit={candles} delay={260} />
+        <Window scene="bibliotheque" lit={lit} delay={350} />
       </div>
+      </div>
+
+      {/* Voile de lumière : relayé par la salle 3D à l'arrivée */}
+      <div aria-hidden className="threshold-veil pointer-events-none fixed inset-0 z-50" />
 
       {/* Threshold text and actions */}
       <div
@@ -183,15 +200,12 @@ export function IntroHero() {
   );
 }
 
-function Sconce({ lit, delay }: { lit: boolean; delay: number }) {
+function Window({ scene, lit, delay }: { scene: "copiste" | "bibliotheque"; lit: boolean; delay: number }) {
   return (
-    <div aria-hidden className="threshold-sconce relative mb-[34%] hidden flex-col items-center sm:flex" data-lit={lit} style={{ transitionDelay: `${delay}ms` }}>
-      <span className="threshold-glow absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full" style={{ transitionDelay: `${delay}ms` }} />
-      <span className="threshold-flame relative h-4 w-2.5" style={{ transitionDelay: `${delay}ms` }} />
-      <span className="h-10 w-3 rounded-[2px] bg-gradient-to-b from-[#efe3c8] to-[#c9b48c]" />
-      <span className="h-1.5 w-8 rounded-full bg-gradient-to-b from-gold-bright to-gold-soft" />
-      <span className="h-6 w-1 bg-gradient-to-b from-gold to-[#6d5634]" />
-      <span className="h-1 w-10 rounded-full bg-[#6d5634]" />
+    <div className="threshold-window relative" data-lit={lit} style={{ transitionDelay: `${delay}ms` }}>
+      <StainedGlass scene={scene} className="threshold-glass h-full w-full" />
+      {/* Lumière colorée projetée au sol */}
+      <span aria-hidden className="threshold-pool pointer-events-none absolute left-1/2 top-full h-[16%] w-[180%] -translate-x-1/2" style={{ transitionDelay: `${delay}ms` }} />
     </div>
   );
 }
