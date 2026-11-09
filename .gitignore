@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# SCRYPTORIUM
+data/.secrets.json
+data/*.tmp
+!.env.example
+
+# Données privées (texte brut des imports, copies de documents) et archives locales
+data/private/
+data/drive/
+node_modules.zip
