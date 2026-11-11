@@ -37,7 +37,7 @@ export function RoseWindow({ className = "" }: { className?: string }) {
         {Array.from({ length: 12 }, (_, i) => (
           <path key={i} d="M200 96 L200 304 M96 200 H304" transform={`rotate(${i * 15} 200 200)`} stroke="#6876a7" strokeWidth="0.6" opacity="0.2" />
         ))}
-        <image href="/brand/armoiries-vitrail.png" x="130" y="103" width="140" height="194" preserveAspectRatio="xMidYMid meet" />
+        <image href="/brand/armoiries-vitrail-480.webp" x="130" y="103" width="140" height="194" preserveAspectRatio="xMidYMid meet" />
         <circle cx="200" cy="200" r="103" fill={`url(#${id}-light)`} className="vitrail-sun" />
       </g>
       <circle cx="200" cy="200" r="182" fill="none" stroke="#b38f62" strokeWidth="2" strokeDasharray="2 8" />

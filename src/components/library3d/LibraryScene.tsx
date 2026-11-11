@@ -1858,8 +1858,11 @@ function DecorBooks({ decor }: { decor: ReturnType<typeof packShelf>["decor"] })
   );
 }
 
+// Toutes les couvertures passent par l'optimiseur de Next (WebP redimensionné). Les couvertures
+// importées sont plus nettes que celles d'Open Library : 640 px, pour rester fines en gros plan.
 function coverSrc(url: string) {
-  return url.startsWith("/uploads/") ? url : `/_next/image?url=${encodeURIComponent(url)}&w=384&q=75`;
+  const width = url.startsWith("/uploads/") ? 640 : 384;
+  return `/_next/image?url=${encodeURIComponent(url)}&w=${width}&q=75`;
 }
 
 function RealBook({

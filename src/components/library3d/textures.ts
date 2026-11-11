@@ -282,7 +282,8 @@ export function rugTexture() {
     texture.needsUpdate = true;
   };
   // Le dessin procédural existant reste le repli si l'image ne peut pas être chargée.
-  source.src = "/textures/rug-unicorn-drawn.png";
+  // Version WebP quasi sans perte, 1024 px (l'original PNG reste dans public/textures) : la toile fait 512 px.
+  source.src = "/textures/rug-unicorn-drawn-1024.webp";
   return texture;
 }
 
