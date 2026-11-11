@@ -1759,9 +1759,11 @@ function Bookcase({
 
   return (
     <group position={slot.position} rotation={[0, slot.rotationY, 0]}>
-      {/* invisible hit area to focus the shelf from the hall */}
+      {/* invisible hit area to focus the shelf from the hall. R3F still raycasts invisible meshes:
+          once the shelf is focused the plane must let the pointer through, or it hides the books. */}
       <mesh
         position={[0, H / 2, D / 2 + 0.01]}
+        raycast={focused ? NO_RAYCAST : THREE.Mesh.prototype.raycast}
         onPointerOver={(e) => { e.stopPropagation(); setHoverCase(true); }}
         onPointerOut={() => setHoverCase(false)}
         onClick={(e) => {
@@ -1857,6 +1859,8 @@ function DecorBooks({ decor }: { decor: ReturnType<typeof packShelf>["decor"] })
     </instancedMesh>
   );
 }
+
+const NO_RAYCAST = () => null;
 
 // Toutes les couvertures passent par l'optimiseur de Next (WebP redimensionné). Les couvertures
 // importées sont plus nettes que celles d'Open Library : 640 px, pour rester fines en gros plan.
