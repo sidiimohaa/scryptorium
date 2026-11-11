@@ -65,22 +65,39 @@ function ScribeScene() {
       {/* tabouret */}
       <path d="M46,196 H76 V201 H46 Z M50,201 H54 V214 H50 Z M68,201 H72 V214 H68 Z" fill={GLASS.wood} />
       {/* robe du moine, assis, tourné vers le pupitre */}
-      <path d="M44,200 C44,184 48,168 56,160 C62,155 72,154 78,160 C84,168 86,184 84,200 Z" fill={GLASS.robe} />
-      <path d="M56,170 C58,182 58,192 56,200 M70,166 C72,178 74,190 74,200" fill="none" stroke="#000" strokeOpacity="0.45" strokeWidth="0.9" />
+      <path d="M43,202 C43,188 46,169 55,160 C62,153 72,154 78,160 L81,180 L77,191 L86,207 L48,207 Z" fill={GLASS.robe} />
+      <path d="M55,164 C48,178 49,192 48,207 L60,207 C57,191 61,177 66,165 Z" fill={GLASS.wood} />
+      <path d="M68,176 L78,183 L70,194 L78,207 H65 C60,192 63,183 68,176 Z" fill="#36231b" />
+      <path d="M54,177 Q50,191 53,202 M60,183 L60,203 M72,194 L77,203" fill="none" stroke={GLASS.amber} strokeOpacity="0.65" strokeWidth="0.8" />
+      <path d="M49,181 Q63,187 78,180" fill="none" stroke={GLASS.gold} strokeWidth="1.5" />
+      <path d="M65,185 L63,199 M65,186 L69,197" fill="none" stroke={GLASS.gold} strokeWidth="1" />
+      <path d="M69,208 Q77,206 82,209 L84,213 H68 Z M51,208 H60 L65,213 H50 Z" fill="#2a1a12" />
       {/* capuchon et visage */}
-      <path d="M58,160 C54,146 60,134 72,134 C80,135 84,142 82,152 C78,156 70,160 58,160 Z" fill={GLASS.robe} />
-      <path d="M74,141 C80,141 84,146 83,152 C82,156 78,158 74,157 C72,152 72,146 74,141 Z" fill={GLASS.skin} />
-      <circle cx="80" cy="146" r="0.9" fill={LEAD} stroke="none" />
+      <path d="M57,160 C54,151 57,138 66,134 C75,129 83,135 84,143 L78,155 L76,166 L65,169 Z" fill={GLASS.robe} />
+      <path d="M61,156 C58,147 62,138 69,137 C76,135 81,139 82,144 L73,155 L70,163 Z" fill={GLASS.wood} />
+      <path d="M70,139 C76,136 82,140 82,146 L87,151 L83,153 L82,159 L77,162 L75,168 L68,163 L71,157 C68,154 67,150 68,146 Z" fill={GLASS.skin} />
+      <path d="M68,146 Q68,136 76,137 Q82,138 82,144 L76,142 L73,149 L70,153 Z" fill="#69503a" />
+      <path d="M76,157 L82,155 L82,160 L77,163 L73,158" fill="#b98559" strokeWidth="0.7" />
+      <path d="M77,146 L81,147 M79,154 L82,154" fill="none" strokeWidth="0.65" strokeLinecap="round" />
+      <circle cx="79.5" cy="148" r="0.65" fill={LEAD} stroke="none" />
+      <path d="M72,150 C69,146 68,151 71,153" fill="none" stroke="#9d6848" strokeWidth="0.7" />
+      <path d="M58,159 L67,164 L75,161 L79,167 L68,173 Z" fill={GLASS.wood} />
       {/* bras tendu vers le livre */}
-      <path d="M72,166 L94,164 L95,170 L73,173 Z" fill={GLASS.robe} />
-      <circle cx="96" cy="166.5" r="2.6" fill={GLASS.skin} />
+      <path d="M72,165 C78,163 79,169 83,173 L93,167 L97,172 L84,183 C80,185 76,178 70,174 Z" fill={GLASS.robe} />
+      <path d="M73,168 L82,178 L91,173" fill="none" stroke={GLASS.amber} strokeWidth="0.85" />
+      <path d="M90,168 L94,166 L98,172 L94,175 Z" fill={GLASS.wood} />
+      <path d="M94,167 L98,164 Q100,163 101,165 L101,168 L104,171 L102,173 L98,171 L97,173 Z" fill={GLASS.skin} strokeWidth="0.9" />
+      <path d="M99,167 L102,170 M97,169 L100,171" fill="none" stroke="#9d6848" strokeWidth="0.55" />
       {/* plume */}
-      <path d="M96,166 L104,148 C107,150 106,156 98,166 Z" fill={GLASS.cream} />
+      <path d="M100,166 C98,157 103,147 111,144 C111,151 108,158 102,163 Z" fill={GLASS.cream} strokeWidth="0.9" />
+      <path d="M101,172 L107,150 M102,160 L106,157 M104,154 L103,151" fill="none" strokeWidth="0.65" strokeLinecap="round" />
       {/* pupitre incliné */}
       <path d="M90,172 L116,160 L118,166 L93,178 Z" fill={GLASS.wood} />
       <path d="M103,173 H108 V202 H103 Z" fill={GLASS.wood} />
       {/* livre ouvert */}
-      <path d="M92,170 L103,165 L105,170 L94,175 Z M103,165 L114,160 L116,165 L105,170 Z" fill={GLASS.cream} />
+      <path d="M90,171 L101,165 L106,169 L114,161 L117,167 L105,175 Z" fill={GLASS.ruby} />
+      <path d="M91,169 Q98,163 103,165 L105,172 Q100,170 93,173 Z M103,165 Q108,161 114,160 L116,165 Q109,167 105,172 Z" fill={GLASS.cream} strokeWidth="0.8" />
+      <path d="M95,169 L101,167 M96,171 L102,169 M107,166 L112,163 M108,168 L114,165" fill="none" stroke="#88663e" strokeWidth="0.55" />
       {/* encrier */}
       <path d="M111,154 H116 V160 H111 Z" fill={GLASS.violet} />
       {/* chandelle */}

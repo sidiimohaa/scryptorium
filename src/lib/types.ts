@@ -4,7 +4,7 @@ export const READING_STATUSES = ["to_read", "reading", "finished", "abandoned", 
 export type ReadingStatus = (typeof READING_STATUSES)[number];
 
 export const STATUS_LABELS: Record<ReadingStatus, string> = {
-  to_read: "À lire",
+  to_read: "Prochainement",
   reading: "En cours",
   finished: "Terminé",
   abandoned: "Abandonné",

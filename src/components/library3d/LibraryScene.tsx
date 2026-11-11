@@ -16,8 +16,15 @@ import {
   windowTexture,
   woodTexture,
   type Fonts,
+  globeTexture,
+  leatherTexture,
+  illuminatedPageTexture,
+  pageEdgeTexture,
+  velvetBackTexture,
+  velvetSeatTexture,
+  writingSheet,
 } from "./textures";
-import type { SceneBook, SceneShelf, View } from "./types";
+import type { CopyistNote, SceneBook, SceneShelf, View } from "./types";
 
 type Props = {
   shelves: SceneShelf[];
@@ -30,6 +37,12 @@ type Props = {
   entrance?: boolean;
   /** Appelé au premier rendu de la scène (pour lever le voile de lumière). */
   onReady?: () => void;
+  /** Recommandation en cours d'écriture par le copiste (null = absent). */
+  copyist?: CopyistNote | null;
+  /** Clic sur le manuscrit du bureau. */
+  onDeskBook?: () => void;
+  /** Le copiste a fini d'écrire. */
+  onCopyistDone?: () => void;
 };
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -55,7 +68,7 @@ export default function LibraryScene(props: Props) {
   );
 }
 
-function Room({ shelves, view, lowPower, onView, onIntroDone, entrance, onReady }: Props) {
+function Room({ shelves, view, lowPower, onView, onIntroDone, entrance, onReady, copyist, onDeskBook, onCopyistDone }: Props) {
   const fonts = useMemo(() => resolveFonts(), []);
   const room = useMemo(() => computeRoom(shelves.length), [shelves.length]);
   const reveal = useRef(entrance ? 0.6 : view.kind === "intro" ? 0 : 1);
@@ -86,8 +99,11 @@ function Room({ shelves, view, lowPower, onView, onIntroDone, entrance, onReady 
     <>
       <CameraRig view={view} room={room} entrance={entrance} />
       <Lights reveal={reveal} lowPower={lowPower} />
+      <group position={[0, 6.2, -6]} scale={0.72}>
+        <GrandChandelier drop={(room.height - 6.2) / 0.72} reveal={reveal} lowPower={lowPower} />
+      </group>
       <Architecture room={room} doorAngle={doorAngle} lowPower={lowPower} />
-      <ReadingDesk />
+      <ReadingDesk copyist={copyist ?? null} onBook={onDeskBook} onDone={onCopyistDone} />
       {shelves.map((s, i) => (
         <Bookcase
           key={s.id}
@@ -135,6 +151,13 @@ function CameraRig({ view, room, entrance }: { view: View; room: ReturnType<type
       targetLook.set(0, 2.6, -6);
       lambda = 1.1;
       parallax = 0.6;
+    } else if (view.kind === "desk") {
+      // De trois quarts face, côté gauche : on voit le copiste écrire et son feuillet (bureau centré en z = 1).
+      const narrow = size.width < 768;
+      targetPos.set(narrow ? -0.85 : -0.78, narrow ? 1.68 : 1.54, narrow ? 0.62 : 0.92);
+      targetLook.set(narrow ? -0.06 : -0.22, 0.97, 1.76);
+      lambda = 1.6;
+      parallax = 0.04;
     } else {
       const slot = room.slots[view.shelf];
       if (view.kind === "shelf") {
@@ -182,7 +205,7 @@ function Lights({ reveal, lowPower }: { reveal: React.RefObject<number>; lowPowe
     if (amb.current) amb.current.intensity = 0.55 * r + 0.03;
     if (hemi.current) hemi.current.intensity = 0.7 * r;
     if (win.current) win.current.intensity = 1.1 * r;
-    if (desk.current) desk.current.intensity = 5.5 * r * candle;
+    if (desk.current) desk.current.intensity = 7 * r * candle;
     lamps.current.forEach((l) => l && (l.intensity = 14 * r * flicker));
   });
 
@@ -192,7 +215,7 @@ function Lights({ reveal, lowPower }: { reveal: React.RefObject<number>; lowPowe
       <hemisphereLight ref={hemi} args={["#f3d9a6", "#1a0f0a"]} />
       <directionalLight ref={win} color="#ffe4b8" position={[-14, 11, 2]} />
       {/* Chandelle du bureau (le bureau est centré en z = 1) */}
-      <pointLight ref={desk} color="#ff9e4a" position={[0.72, 1.32, 0.82]} distance={7} decay={1.6} />
+      <pointLight ref={desk} color="#ff9e4a" position={[0.78, 1.38, 0.68]} distance={7.5} decay={1.6} />
       {lampPos.map((p, i) => (
         <group key={i} position={p as unknown as [number, number, number]}>
           <pointLight ref={(el) => { lamps.current[i] = el; }} color="#ffc27a" distance={16} decay={1.5} />
@@ -225,8 +248,8 @@ function Flame({ seed = 0, scale = 1 }: { seed?: number; scale?: number }) {
         <meshBasicMaterial color="#fff6d8" toneMapped={false} />
       </mesh>
       <mesh position={[0, 0.035, 0]}>
-        <sphereGeometry args={[0.07, 12, 12]} />
-        <meshBasicMaterial color="#ffae55" transparent opacity={0.14} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
+        <sphereGeometry args={[0.045, 12, 12]} />
+        <meshBasicMaterial color="#ffae55" transparent opacity={0.08} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
       </mesh>
     </group>
   );
@@ -333,6 +356,120 @@ function Chandelier({ drop, seed = 0 }: { drop: number; seed?: number }) {
           </group>
         );
       })}
+    </group>
+  );
+}
+
+/** Grand lustre central : cage gothique, deux étages de bougies et pampilles de cristal. */
+function GrandChandelier({ drop, reveal, lowPower }: {
+  drop: number;
+  reveal: React.RefObject<number>;
+  lowPower: boolean;
+}) {
+  const light = useRef<THREE.PointLight>(null);
+  const segments = lowPower ? 24 : 48;
+  const arms = lowPower ? 8 : 12;
+  const bronze = { color: "#79542f", metalness: 0.8, roughness: 0.32 };
+  const curves = useMemo(() => {
+    const curve = (points: [number, number, number][]) => new THREE.CatmullRomCurve3(points.map((p) => new THREE.Vector3(...p)));
+    return {
+      arm: curve([[0.2, -0.65, 0], [0.7, -0.7, 0], [1.2, -0.38, 0], [1.55, 0.12, 0], [1.67, 0.48, 0]]),
+      upper: curve([[0.2, 0.1, 0], [0.45, 0.05, 0], [0.8, 0.38, 0], [0.94, 1.15, 0]]),
+      rib: curve([[0.16, 2.7, 0], [0.38, 1.85, 0], [0.7, 0.8, 0], [1.3, 0, 0]]),
+      scroll: curve([[1.26, 0.02, 0], [1.46, 0.24, 0], [1.32, 0.44, 0], [1.14, 0.36, 0], [1.19, 0.22, 0]]),
+    };
+  }, []);
+
+  useFrame(({ clock }) => {
+    if (light.current) light.current.intensity = (reveal.current ?? 1) * 17 * (1 + Math.sin(clock.elapsedTime * 5.7) * 0.025);
+  });
+
+  const pendant = (length: number) => (
+    <group>
+      <mesh position={[0, -length / 2, 0]}>
+        <cylinderGeometry args={[0.006, 0.006, length, 5]} />
+        <meshStandardMaterial {...bronze} />
+      </mesh>
+      <mesh position={[0, -length - 0.1, 0]} scale={[0.065, 0.16, 0.065]}>
+        <octahedronGeometry args={[1, 0]} />
+        <meshStandardMaterial color="#f3e5c8" metalness={0.35} roughness={0.08} transparent opacity={0.72} flatShading />
+      </mesh>
+    </group>
+  );
+
+  return (
+    <group name="Grand lustre central">
+      <pointLight ref={light} color="#ffc482" position={[0, 0.7, 0]} distance={12} decay={1.7} />
+      {/* Chaîne alternée et rosace de fixation au plafond. */}
+      <mesh position={[0, drop - 0.08, 0]}>
+        <cylinderGeometry args={[0.24, 0.16, 0.16, segments]} />
+        <meshStandardMaterial {...bronze} />
+      </mesh>
+      {Array.from({ length: Math.ceil((drop - 2.85) / 0.18) }, (_, i) => (
+        <mesh key={i} position={[0, 2.85 + i * 0.18, 0]} rotation={[0, i % 2 ? Math.PI / 2 : 0, 0]} scale={[0.7, 1, 1]}>
+          <torusGeometry args={[0.1, 0.018, 6, 12]} />
+          <meshStandardMaterial {...IRON} />
+        </mesh>
+      ))}
+      {/* Tige, cage ajourée et couronnes moulurées. */}
+      <mesh position={[0, 0.9, 0]}>
+        <cylinderGeometry args={[0.1, 0.17, 3.6, 12]} />
+        <meshStandardMaterial {...bronze} />
+      </mesh>
+      {[[0, 1.3, 0.09], [0.13, 1.3, 0.035], [-0.13, 1.3, 0.035], [1.4, 0.5, 0.04], [2.3, 0.34, 0.045], [2.7, 0.25, 0.065], [-0.8, 0.33, 0.045]].map(([y, radius, tube], i) => (
+        <mesh key={i} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[radius, tube, 8, segments]} />
+          <meshStandardMaterial {...(i === 0 ? IRON : bronze)} />
+        </mesh>
+      ))}
+      <mesh position={[0, -0.66, 0]}>
+        <sphereGeometry args={[0.32, 16, 12]} />
+        <meshStandardMaterial {...bronze} />
+      </mesh>
+      <mesh position={[0, -1.1, 0]} rotation={[Math.PI, 0, 0]}>
+        <coneGeometry args={[0.17, 0.4, 12]} />
+        <meshStandardMaterial {...bronze} />
+      </mesh>
+      <group position={[0, -1.3, 0]}>{pendant(0.12)}</group>
+      {Array.from({ length: arms }, (_, i) => (
+        <group key={i} rotation={[0, (i / arms) * Math.PI * 2, 0]}>
+          <mesh>
+            <tubeGeometry args={[curves.arm, segments, 0.026, 6, false]} />
+            <meshStandardMaterial {...bronze} />
+          </mesh>
+          <mesh>
+            <tubeGeometry args={[curves.rib, segments, 0.018, 6, false]} />
+            <meshStandardMaterial {...bronze} />
+          </mesh>
+          {!lowPower && <mesh>
+            <tubeGeometry args={[curves.scroll, 24, 0.016, 5, false]} />
+            <meshStandardMaterial {...bronze} />
+          </mesh>}
+          <group position={[1.67, 0.48, 0]}>
+            <mesh>
+              <cylinderGeometry args={[0.13, 0.055, 0.09, 12]} />
+              <meshStandardMaterial {...bronze} />
+            </mesh>
+            <group position={[0, 0.045, 0]}><Candle height={0.34 + (i % 3) * 0.04} radius={0.042} seed={80 + i} /></group>
+          </group>
+          <group position={[1.35, -0.18, 0]}>{pendant(i % 2 ? 0.26 : 0.42)}</group>
+          {/* Perles de la frise et fleuron de la cage. */}
+          <mesh position={[1.31, 0, 0]} scale={[0.055, 0.08, 0.055]}>
+            <octahedronGeometry args={[1, 0]} />
+            <meshStandardMaterial {...bronze} />
+          </mesh>
+          {i % 2 === 0 && <>
+            <mesh>
+              <tubeGeometry args={[curves.upper, segments, 0.022, 6, false]} />
+              <meshStandardMaterial {...bronze} />
+            </mesh>
+            <group position={[0.94, 1.15, 0]}>
+              <mesh><cylinderGeometry args={[0.1, 0.04, 0.07, 12]} /><meshStandardMaterial {...bronze} /></mesh>
+              <group position={[0, 0.035, 0]}><Candle height={0.32} radius={0.038} seed={110 + i} /></group>
+            </group>
+          </>}
+        </group>
+      ))}
     </group>
   );
 }
@@ -479,72 +616,1090 @@ function Door({ tex, offset }: { tex: THREE.Texture; offset: number }) {
   );
 }
 
-function ReadingDesk() {
+const GILT = { color: "#c9a050", metalness: 0.95, roughness: 0.26 } as const;
+const BRASS = { color: "#b8914f", metalness: 0.9, roughness: 0.3 } as const;
+/** Dorure à la feuille : moins métallique, pour rester dorée sans reflets d'environnement. */
+const GILDING = { color: "#d4ac58", metalness: 0.55, roughness: 0.32, emissive: "#3a2808", emissiveIntensity: 0.35 } as const;
+
+/** Pied galbé (cabriole) : genou saillant, cheville rentrée, sabot doré ; garniture dorée au genou. */
+function CabrioleLeg({ x, z, wood, gilt = false }: { x: number; z: number; wood?: THREE.Texture; gilt?: boolean }) {
+  const segs = useMemo(() => {
+    const out = new THREE.Vector3(Math.sign(x), 0, Math.sign(z)).normalize();
+    const at = (o: number, y: number) => new THREE.Vector3(x + out.x * o, y, z + out.z * o);
+    const curve = new THREE.CatmullRomCurve3([at(0, 0.64), at(0.06, 0.54), at(0.035, 0.36), at(-0.025, 0.14), at(0.005, 0.03)]);
+    const radius = (t: number) => (t < 0.18 ? 0.05 + t * 0.05 : THREE.MathUtils.lerp(0.059, 0.024, Math.min(1, (t - 0.18) / 0.62)));
+    const N = 12;
+    return Array.from({ length: N }, (_, i) => {
+      const t0 = i / N;
+      const t1 = (i + 1) / N;
+      const p0 = curve.getPoint(t0);
+      const p1 = curve.getPoint(t1);
+      const dir = p1.clone().sub(p0);
+      return {
+        mid: p0.clone().add(p1).multiplyScalar(0.5),
+        len: dir.length() * 1.12,
+        q: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()),
+        r0: radius(t0),
+        r1: radius(t1),
+      };
+    });
+  }, [x, z]);
+  const out = new THREE.Vector3(Math.sign(x), 0, Math.sign(z)).normalize();
   return (
-    <group position={[0, 0, 1]}>
-      <mesh position={[0, 0.78, 0]}>
-        <boxGeometry args={[2.4, 0.08, 1.2]} />
-        <meshStandardMaterial color="#3a271b" roughness={0.45} />
-      </mesh>
-      <mesh position={[0, 0.79, 0]}>
-        <boxGeometry args={[2.0, 0.085, 0.9]} />
-        <meshStandardMaterial color="#2b3b2e" roughness={0.9} />
-      </mesh>
-      {[[-1.08, -0.5], [1.08, -0.5], [-1.08, 0.5], [1.08, 0.5]].map(([x, z]) => (
-        <mesh key={`${x}${z}`} position={[x, 0.37, z]}>
-          <boxGeometry args={[0.12, 0.74, 0.12]} />
-          <meshStandardMaterial color="#2e1f16" roughness={0.6} />
+    <group>
+      {segs.map((s, i) => (
+        <mesh key={i} position={s.mid} quaternion={s.q}>
+          <cylinderGeometry args={[s.r1, s.r0, s.len, 10]} />
+          {gilt ? <meshStandardMaterial {...GILDING} /> : <meshStandardMaterial map={wood} color="#5a3220" roughness={0.38} />}
         </mesh>
       ))}
-      {/* open book */}
-      {[-1, 1].map((s) => (
-        <mesh key={s} position={[s * 0.19, 0.85, 0.05]} rotation={[-Math.PI / 2, s * 0.12, 0]}>
-          <planeGeometry args={[0.36, 0.5]} />
-          <meshStandardMaterial color="#ecdfc4" roughness={0.95} side={THREE.DoubleSide} />
+      {/* espagnolette dorée au genou */}
+      <mesh position={[x + out.x * 0.1, 0.55, z + out.z * 0.1]} scale={[0.035, 0.075, 0.035]}>
+        <sphereGeometry args={[1, 12, 12]} />
+        <meshStandardMaterial {...(gilt ? GILDING : GILT)} />
+      </mesh>
+      <mesh position={[x + out.x * 0.095, 0.45, z + out.z * 0.095]} rotation={[0, 0, 0]}>
+        <coneGeometry args={[0.03, 0.13, 8]} />
+        <meshStandardMaterial {...(gilt ? GILDING : GILT)} />
+      </mesh>
+      {/* sabot de bronze */}
+      <mesh position={[x + out.x * 0.005, 0.025, z + out.z * 0.005]}>
+        <cylinderGeometry args={[0.024, 0.034, 0.05, 12]} />
+        <meshStandardMaterial {...(gilt ? GILDING : GILT)} />
+      </mesh>
+    </group>
+  );
+}
+
+/** Tiroir de ceinture : façade à filet doré et poignée en accolade. */
+function Drawer({ x, z, w, face }: { x: number; z: number; w: number; face: 1 | -1 }) {
+  const fz = z + face * 0.008;
+  return (
+    <group>
+      <mesh position={[x, 0.71, fz]}>
+        <boxGeometry args={[w, 0.12, 0.016]} />
+        <meshStandardMaterial color="#3b1f14" roughness={0.4} />
+      </mesh>
+      {/* filet doré */}
+      {[0.052, -0.052].map((dy) => (
+        <mesh key={dy} position={[x, 0.71 + dy, fz + face * 0.009]}>
+          <boxGeometry args={[w - 0.02, 0.006, 0.004]} />
+          <meshStandardMaterial {...GILT} />
         </mesh>
       ))}
-      {/* chandelier de laiton et sa bougie */}
-      <group position={[0.72, 0.82, -0.18]}>
-        <mesh position={[0, 0.01, 0]}>
-          <cylinderGeometry args={[0.09, 0.1, 0.02, 24]} />
-          <meshStandardMaterial color="#b08d57" metalness={0.9} roughness={0.28} />
+      {[-1, 1].map((sx) => (
+        <mesh key={sx} position={[x + sx * (w / 2 - 0.013), 0.71, fz + face * 0.009]}>
+          <boxGeometry args={[0.006, 0.11, 0.004]} />
+          <meshStandardMaterial {...GILT} />
         </mesh>
-        <mesh position={[0, 0.07, 0]}>
-          <cylinderGeometry args={[0.014, 0.02, 0.11, 10]} />
-          <meshStandardMaterial color="#b08d57" metalness={0.9} roughness={0.28} />
+      ))}
+      {/* poignée */}
+      <mesh position={[x, 0.705, fz + face * 0.02]} rotation={[0, 0, Math.PI]}>
+        <torusGeometry args={[0.04, 0.006, 6, 20, Math.PI]} />
+        <meshStandardMaterial {...GILT} />
+      </mesh>
+      {[-1, 1].map((sx) => (
+        <mesh key={sx} position={[x + sx * 0.05, 0.712, fz + face * 0.014]}>
+          <sphereGeometry args={[0.012, 10, 10]} />
+          <meshStandardMaterial {...GILT} />
         </mesh>
-        <mesh position={[0, 0.13, 0]}>
-          <cylinderGeometry args={[0.055, 0.03, 0.02, 16]} />
-          <meshStandardMaterial color="#b08d57" metalness={0.9} roughness={0.28} />
+      ))}
+    </group>
+  );
+}
+
+/** Encrier de cristal hexagonal, couvercle de laiton ouvert, plume noire dans son porte-plume. */
+function Inkwell() {
+  const feather = useMemo(() => {
+    const sh = new THREE.Shape();
+    sh.moveTo(0, 0);
+    sh.bezierCurveTo(0.03, 0.04, 0.045, 0.12, 0.028, 0.2);
+    sh.bezierCurveTo(0.02, 0.23, 0.008, 0.25, 0, 0.26);
+    sh.bezierCurveTo(-0.012, 0.22, -0.03, 0.14, -0.02, 0.05);
+    sh.bezierCurveTo(-0.016, 0.03, -0.008, 0.01, 0, 0);
+    return new THREE.ShapeGeometry(sh, 16);
+  }, []);
+  return (
+    <group>
+      {/* flacon de cristal */}
+      <mesh position={[0, 0.03, 0]}>
+        <cylinderGeometry args={[0.048, 0.052, 0.06, 6]} />
+        <meshPhysicalMaterial color="#e6eef5" roughness={0.04} metalness={0} transparent opacity={0.32} clearcoat={1} />
+      </mesh>
+      <mesh position={[0, 0.025, 0]}>
+        <cylinderGeometry args={[0.04, 0.044, 0.042, 6]} />
+        <meshStandardMaterial color="#0c1840" roughness={0.15} transparent opacity={0.92} />
+      </mesh>
+      {/* col et couvercle de laiton */}
+      <mesh position={[0, 0.068, 0]}>
+        <cylinderGeometry args={[0.026, 0.028, 0.018, 20]} />
+        <meshStandardMaterial {...BRASS} />
+      </mesh>
+      <group position={[-0.026, 0.077, 0]} rotation={[0, 0, 1.75]}>
+        <mesh position={[0.026, 0, 0]} rotation={[0, 0, 0]}>
+          <cylinderGeometry args={[0.028, 0.028, 0.006, 20]} />
+          <meshStandardMaterial {...BRASS} />
         </mesh>
-        <mesh position={[0.07, 0.07, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.035, 0.007, 6, 16, Math.PI * 1.2]} />
-          <meshStandardMaterial color="#b08d57" metalness={0.9} roughness={0.28} />
+      </group>
+      {/* porte-plume et plume, inclinés vers l'arrière-droite */}
+      <group position={[0, 0.07, 0]} rotation={[-0.25, 0, -0.38]}>
+        <mesh position={[0, 0.03, 0]}>
+          <cylinderGeometry args={[0.0055, 0.004, 0.07, 8]} />
+          <meshStandardMaterial {...BRASS} />
         </mesh>
-        <group position={[0, 0.14, 0]}>
-          <Candle height={0.22} radius={0.028} seed={41} />
+        <mesh geometry={feather} position={[0, 0.06, 0]}>
+          <meshStandardMaterial color="#1b1a22" roughness={0.6} metalness={0.15} side={THREE.DoubleSide} />
+        </mesh>
+        <mesh geometry={feather} position={[0, 0.06, 0]} rotation={[0, Math.PI / 2, 0]} scale={[0.6, 1, 1]}>
+          <meshStandardMaterial color="#26242e" roughness={0.6} metalness={0.15} side={THREE.DoubleSide} />
+        </mesh>
+        <mesh position={[0, 0.19, 0]}>
+          <cylinderGeometry args={[0.0012, 0.002, 0.26, 4]} />
+          <meshStandardMaterial color="#d9d2c4" roughness={0.5} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+/** Chandelier de laiton à trois branches : pied tourné, deux bras en volute, trois bougies. */
+function Candelabra() {
+  const lathe = useMemo(() => {
+    const pts = [
+      [0.0, 0], [0.08, 0], [0.08, 0.006], [0.06, 0.014], [0.036, 0.03], [0.024, 0.06], [0.018, 0.12],
+      [0.026, 0.15], [0.016, 0.17], [0.022, 0.19], [0.014, 0.215], [0.0, 0.215],
+    ].map(([r, y]) => new THREE.Vector2(r, y));
+    return new THREE.LatheGeometry(pts, 28);
+  }, []);
+  const cup = useMemo(() => {
+    const pts = [[0, 0], [0.012, 0], [0.016, 0.01], [0.042, 0.016], [0.044, 0.022], [0.024, 0.026], [0.026, 0.05], [0.022, 0.05], [0, 0.05]].map(
+      ([r, y]) => new THREE.Vector2(r, y),
+    );
+    return new THREE.LatheGeometry(pts, 24);
+  }, []);
+  const arm = useMemo(
+    () =>
+      new THREE.CatmullRomCurve3(
+        [[0, 0.2, 0], [0.04, 0.19, 0], [0.085, 0.205, 0], [0.11, 0.235, 0], [0.115, 0.255, 0]].map(([a, b, c2]) => new THREE.Vector3(a, b, c2)),
+      ),
+    [],
+  );
+  return (
+    <group>
+      <mesh geometry={lathe}>
+        <meshStandardMaterial {...BRASS} />
+      </mesh>
+      {[1, -1].map((sx) => (
+        <group key={sx} scale={[sx, 1, 1]}>
+          <mesh>
+            <tubeGeometry args={[arm, 24, 0.008, 8, false]} />
+            <meshStandardMaterial {...BRASS} />
+          </mesh>
+          <mesh position={[0.07, 0.19, 0]} rotation={[0, 0, -0.6]}>
+            <coneGeometry args={[0.009, 0.03, 8]} />
+            <meshStandardMaterial {...BRASS} />
+          </mesh>
+          <group position={[0.115, 0.252, 0]}>
+            <mesh geometry={cup}>
+              <meshStandardMaterial {...BRASS} />
+            </mesh>
+            <group position={[0, 0.045, 0]}>
+              <Candle height={0.2} radius={0.019} seed={sx > 0 ? 61 : 67} />
+            </group>
+          </group>
+        </group>
+      ))}
+      <group position={[0, 0.215, 0]}>
+        <mesh geometry={cup} scale={[1.1, 1.3, 1.1]}>
+          <meshStandardMaterial {...BRASS} />
+        </mesh>
+        <group position={[0, 0.06, 0]}>
+          <Candle height={0.23} radius={0.02} seed={64} />
         </group>
       </group>
-      {/* bougie entamée dans une coupelle */}
-      <group position={[0.9, 0.82, 0.02]}>
-        <mesh position={[0, 0.008, 0]}>
-          <cylinderGeometry args={[0.055, 0.06, 0.016, 16]} />
-          <meshStandardMaterial color="#8a6a3a" metalness={0.8} roughness={0.35} />
+    </group>
+  );
+}
+
+/** Globe terrestre ancien : socle de bois tourné, trépied de laiton, méridien incliné ; tourne lentement. */
+function Globe() {
+  const tex = useMemo(() => globeTexture(), []);
+  const spin = useRef<THREE.Mesh>(null);
+  useFrame((_, dt) => {
+    if (spin.current) spin.current.rotation.y += dt * 0.12;
+  });
+  const base = useMemo(() => {
+    const pts = [[0, 0], [0.11, 0], [0.115, 0.008], [0.108, 0.018], [0.1, 0.022], [0.098, 0.03], [0.07, 0.034], [0, 0.034]].map(
+      ([r, y]) => new THREE.Vector2(r, y),
+    );
+    return new THREE.LatheGeometry(pts, 32);
+  }, []);
+  const R = 0.105;
+  const cy = 0.27;
+  return (
+    <group>
+      <mesh geometry={base}>
+        <meshStandardMaterial color="#5a3018" roughness={0.35} />
+      </mesh>
+      {/* boussole sur le socle */}
+      <mesh position={[0, 0.036, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.04, 24]} />
+        <meshStandardMaterial color="#d9cfae" roughness={0.6} />
+      </mesh>
+      <mesh position={[0, 0.037, 0]} rotation={[-Math.PI / 2, 0, 0.4]}>
+        <planeGeometry args={[0.006, 0.065]} />
+        <meshStandardMaterial color="#7a1e22" />
+      </mesh>
+      {/* trépied : trois arcs de laiton */}
+      {[0, 1, 2].map((k) => (
+        <mesh key={k} position={[0, 0.034, 0]} rotation={[0, (k / 3) * Math.PI * 2, 0]}>
+          <torusGeometry args={[0.06, 0.006, 6, 20, Math.PI]} />
+          <meshStandardMaterial {...BRASS} />
         </mesh>
-        <group position={[0, 0.016, 0]}>
-          <Candle height={0.07} radius={0.032} seed={57} />
+      ))}
+      <mesh position={[0, 0.125, 0]}>
+        <cylinderGeometry args={[0.009, 0.014, 0.07, 12]} />
+        <meshStandardMaterial {...BRASS} />
+      </mesh>
+      <mesh position={[0, 0.16, 0]}>
+        <sphereGeometry args={[0.016, 12, 12]} />
+        <meshStandardMaterial {...BRASS} />
+      </mesh>
+      {/* globe et méridien inclinés */}
+      <group position={[0, cy, 0]} rotation={[0, 0, -0.41]}>
+        <mesh ref={spin}>
+          <sphereGeometry args={[R, 40, 28]} />
+          <meshStandardMaterial map={tex} roughness={0.55} />
+        </mesh>
+        <mesh rotation={[0, Math.PI / 2, 0]}>
+          <torusGeometry args={[R + 0.012, 0.0055, 8, 64]} />
+          <meshStandardMaterial {...BRASS} />
+        </mesh>
+        <mesh position={[0, R + 0.03, 0]}>
+          <coneGeometry args={[0.006, 0.03, 8]} />
+          <meshStandardMaterial {...BRASS} />
+        </mesh>
+        <mesh position={[0, -(R + 0.02), 0]}>
+          <cylinderGeometry args={[0.004, 0.004, 0.03, 6]} />
+          <meshStandardMaterial {...BRASS} />
+        </mesh>
+      </group>
+      {/* cercle d'horizon, porté par le pied */}
+      <mesh position={[0, cy - 0.01, 0]} rotation={[Math.PI / 2 + 0.25, 0, 0]}>
+        <torusGeometry args={[R + 0.022, 0.006, 8, 64]} />
+        <meshStandardMaterial {...BRASS} />
+      </mesh>
+      <mesh position={[0, (cy + 0.16) / 2 - 0.02, 0]}>
+        <cylinderGeometry args={[0.005, 0.005, cy - 0.16 - 0.06, 6]} />
+        <meshStandardMaterial {...BRASS} />
+      </mesh>
+    </group>
+  );
+}
+
+/* ─── Le moine copiste ──────────────────────────────────────────────────── */
+
+const smooth = (t: number) => {
+  const x = Math.min(1, Math.max(0, t));
+  return x * x * (3 - 2 * x);
+};
+
+/** Résout un bras à deux segments : renvoie le coude pour atteindre `target` depuis `shoulder`. */
+function solveArm(shoulder: THREE.Vector3, target: THREE.Vector3, a: number, b: number, pole: THREE.Vector3, outElbow: THREE.Vector3, outHand: THREE.Vector3) {
+  const dir = target.clone().sub(shoulder);
+  const d = THREE.MathUtils.clamp(dir.length(), Math.abs(a - b) + 1e-3, (a + b) * 0.999);
+  dir.normalize();
+  const cosA = (a * a + d * d - b * b) / (2 * a * d);
+  const sinA = Math.sqrt(Math.max(0, 1 - cosA * cosA));
+  const perp = pole.clone().sub(dir.clone().multiplyScalar(pole.dot(dir))).normalize();
+  outElbow.copy(shoulder).addScaledVector(dir, a * cosA).addScaledVector(perp, a * sinA);
+  outHand.copy(shoulder).addScaledVector(dir, d);
+}
+
+/** Place un cylindre unitaire (hauteur 1) entre deux points. */
+function placeSegment(mesh: THREE.Object3D | null, from: THREE.Vector3, to: THREE.Vector3) {
+  if (!mesh) return;
+  const dir = to.clone().sub(from);
+  const len = dir.length();
+  mesh.position.copy(from).addScaledVector(dir, 0.5);
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+  mesh.scale.set(1, len, 1);
+}
+
+/**
+ * Moine copiste (dessin original, procédural), d'après l'iconographie des scriptoria :
+ * assis dans le fauteuil du bureau. Vieil érudit au front dégarni, cheveux et longue barbe
+ * blancs, habit sombre à larges manches, cordelière nouée, sandales, et lourde chaîne de
+ * maillons de métaux mêlés (or, argent, fer, bronze, cuivre) passée autour du cou. Il trempe sa plume dans son cornet à encre puis écrit
+ * sur un feuillet posé sur un pupitre incliné, devant lui.
+ * Coordonnées locales du bureau ; le moine regarde vers −z.
+ */
+function Copyist({ note, top, onDone }: { note: CopyistNote | null; top: number; onDone?: () => void }) {
+  const fonts = useMemo(() => resolveFonts(), []);
+  const [current, setCurrent] = useState<CopyistNote | null>(note);
+  const root = useRef<THREE.Group>(null);
+  const upper = useRef<THREE.Group>(null);
+  const head = useRef<THREE.Group>(null);
+  const beard = useRef<THREE.Group>(null);
+  const segs = useRef<(THREE.Mesh | null)[]>([]);
+  const hands = useRef<(THREE.Mesh | null)[]>([]);
+  const quill = useRef<THREE.Group>(null);
+  const clock = useRef({ start: -1, leaveStart: -1, done: false });
+
+  // Nouvelle recommandation : on l'adopte pendant le rendu (le moine reste affiché pendant sa sortie).
+  if (note && note.key !== current?.key) setCurrent(note);
+  const hasNote = note !== null;
+  useEffect(() => {
+    if (hasNote) clock.current = { start: -1, leaveStart: -1, done: false };
+    else clock.current.leaveStart = -2; // sortie demandée : démarre au prochain frame
+  }, [hasNote, note?.key]);
+
+  const sheet = useMemo(() => (current ? writingSheet(current, fonts) : null), [current, fonts]);
+  useEffect(() => () => sheet?.texture.dispose(), [sheet]);
+
+  const mats = useMemo(
+    () => ({
+      robe: new THREE.MeshStandardMaterial({ color: "#36312c", roughness: 1, transparent: true }),
+      fold: new THREE.MeshStandardMaterial({ color: "#26221f", roughness: 1, transparent: true }),
+      sleeve: new THREE.MeshStandardMaterial({ color: "#36312c", roughness: 1, transparent: true, side: THREE.DoubleSide }),
+      skin: new THREE.MeshStandardMaterial({ color: "#dab49c", roughness: 0.8, transparent: true }),
+      wrinkle: new THREE.MeshStandardMaterial({ color: "#a97f68", roughness: 0.9, transparent: true }),
+      hair: new THREE.MeshStandardMaterial({ color: "#ece8e0", roughness: 0.95, transparent: true }),
+      eye: new THREE.MeshStandardMaterial({ color: "#1a120c", roughness: 0.4, transparent: true }),
+      rope: new THREE.MeshStandardMaterial({ color: "#cdb48a", roughness: 0.9, transparent: true }),
+      wood: new THREE.MeshStandardMaterial({ color: "#6a4228", roughness: 0.6, transparent: true }),
+      leather: new THREE.MeshStandardMaterial({ color: "#5a3a22", roughness: 0.7, transparent: true }),
+      quill: new THREE.MeshStandardMaterial({ color: "#f2ede0", roughness: 0.6, transparent: true, side: THREE.DoubleSide }),
+      sheet: new THREE.MeshStandardMaterial({ roughness: 0.92, transparent: true }),
+      // Maillons de la chaîne : chaque métal correspond à une discipline étudiée.
+      gold: new THREE.MeshStandardMaterial({ color: "#d1a54c", metalness: 0.6, roughness: 0.35, emissive: "#2a1c06", transparent: true }),
+      silver: new THREE.MeshStandardMaterial({ color: "#d4d5da", metalness: 0.6, roughness: 0.32, emissive: "#1a1a1c", transparent: true }),
+      iron: new THREE.MeshStandardMaterial({ color: "#6a6d72", metalness: 0.55, roughness: 0.55, transparent: true }),
+      bronze: new THREE.MeshStandardMaterial({ color: "#b07a3e", metalness: 0.6, roughness: 0.4, emissive: "#1e1206", transparent: true }),
+      copper: new THREE.MeshStandardMaterial({ color: "#c06a40", metalness: 0.6, roughness: 0.4, emissive: "#1e0c04", transparent: true }),
+    }),
+    [],
+  );
+  useEffect(() => {
+    if (sheet) {
+      mats.sheet.map = sheet.texture;
+      mats.sheet.needsUpdate = true;
+    }
+  }, [sheet, mats]);
+
+  const geo = useMemo(() => {
+    const lathe = (pts: number[][], seg = 28) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg);
+    const wedge = new THREE.Shape();
+    // Le grand côté passe sous le bord haut du pupitre (côté opposé au moine, −z une fois tourné).
+    wedge.moveTo(-0.15, 0);
+    wedge.lineTo(0.15, 0);
+    wedge.lineTo(0.15, 0.115);
+    wedge.closePath();
+    return {
+      torso: lathe([[0, 0], [0.2, 0], [0.215, 0.16], [0.2, 0.31], [0.13, 0.43], [0, 0.44]]),
+      skirt: lathe([[0, 0.58], [0.17, 0.58], [0.2, 0.4], [0.24, 0.08], [0.26, 0], [0, 0]]),
+      // Longue barbe : goutte arrondie en haut, en pointe en bas (normalisée, mise à l'échelle au rendu).
+      beard: lathe([[0, -0.5], [0.15, -0.45], [0.45, -0.3], [0.8, -0.1], [1, 0.15], [0.95, 0.3], [0.6, 0.45], [0, 0.5]], 20),
+      wedge: new THREE.ExtrudeGeometry(wedge, { depth: 0.012, bevelEnabled: false }),
+      link: new THREE.TorusGeometry(0.016, 0.0045, 6, 14),
+      feather: (() => {
+        const sh = new THREE.Shape();
+        sh.moveTo(0, 0);
+        sh.bezierCurveTo(0.018, 0.03, 0.026, 0.09, 0.012, 0.15);
+        sh.lineTo(0, 0.16);
+        sh.bezierCurveTo(-0.014, 0.1, -0.018, 0.04, 0, 0);
+        return new THREE.ShapeGeometry(sh, 10);
+      })(),
+    };
+  }, []);
+
+  // Chaîne de maillons autour du cou, posée sur le buste (repère du buste) : elle passe
+  // sur la nuque et descend en pointe sur la poitrine. Maillons alternés à plat / de chant.
+  const chain = useMemo(() => {
+    const METALS = ["gold", "iron", "silver", "bronze", "copper", "iron", "silver"] as const;
+    const profile = [[0, 0.2], [0.16, 0.215], [0.31, 0.2], [0.43, 0.13]]; // (y, rayon) du buste
+    const radiusAt = (y: number) => {
+      for (let k = 1; k < profile.length; k++) {
+        const [y0, r0] = profile[k - 1];
+        const [y1, r1] = profile[k];
+        if (y <= y1) return r0 + ((r1 - r0) * (y - y0)) / (y1 - y0);
+      }
+      return profile[profile.length - 1][1];
+    };
+    const pts: THREE.Vector3[] = [];
+    for (let k = 0; k < 28; k++) {
+      const phi = (k / 28) * Math.PI * 2;
+      const y = 0.43 - 0.18 * Math.pow((1 + Math.cos(phi)) / 2, 1.5);
+      const r = radiusAt(y) + 0.013;
+      pts.push(new THREE.Vector3(Math.sin(phi) * r, y, -Math.cos(phi) * r));
+    }
+    const curve = new THREE.CatmullRomCurve3(pts, true);
+    const n = Math.round(curve.getLength() / 0.034);
+    return Array.from({ length: n }, (_, i) => {
+      const p = curve.getPointAt(i / n);
+      const t = curve.getTangentAt(i / n);
+      const out = new THREE.Vector3(p.x, 0, p.z).normalize();
+      const flat = out.clone().sub(t.clone().multiplyScalar(t.dot(out))).normalize();
+      const normal = i % 2 === 0 ? flat : new THREE.Vector3().crossVectors(t, flat).normalize();
+      const up = new THREE.Vector3().crossVectors(normal, t);
+      const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(t, up, normal));
+      return { p, q, metal: METALS[i % METALS.length] };
+    });
+  }, []);
+
+  // Points clés (repère du bureau)
+  const P = useMemo(() => {
+    // Pupitre au bord avant du bureau, face au fauteuil (siège centré en z = 1.05).
+    const BOARD = { x: 0.04, z: 0.45, yaw: 0, tilt: 0.38, w: 0.28, d: 0.3 };
+    const yOff = Math.sin(BOARD.tilt) * (BOARD.d / 2) + 0.006;
+    // Repère du pupitre : pour placer la pointe de la plume sur le feuillet.
+    const outer = new THREE.Object3D();
+    outer.position.set(BOARD.x, top, BOARD.z);
+    outer.rotation.y = BOARD.yaw;
+    const inner = new THREE.Object3D();
+    inner.position.y = yOff;
+    inner.rotation.x = BOARD.tilt;
+    outer.add(inner);
+    outer.updateMatrixWorld(true);
+    return {
+      BOARD,
+      yOff,
+      board: inner,
+      // Assis sur le coussin du fauteuil (dessus à y ≈ 0.55), vers l'avant de l'assise.
+      hip: new THREE.Vector3(0, 0.645, 1.0),
+      shinZ: 0.65,
+      // Cornet à encre du copiste, à droite du pupitre (l'encrier de cristal est hors de portée).
+      ink: new THREE.Vector3(0.3, top + 0.07, 0.47),
+      inkAbove: new THREE.Vector3(0.3, top + 0.17, 0.47),
+      rest: new THREE.Vector3(0.22, top + 0.04, 0.57),
+      leftHand: inner.localToWorld(new THREE.Vector3(-0.12, 0.03, -0.01)),
+    };
+  }, [top]);
+
+  const SW = 0.2;
+  const SH = 0.26;
+  const sheetPoint = (cx: number, cy: number, lift: number) => {
+    const u = (cx / (sheet?.width ?? 480) - 0.5) * SW;
+    const v = (cy / (sheet?.height ?? 640) - 0.5) * SH;
+    return P.board.localToWorld(new THREE.Vector3(u, 0.0075 + lift, v));
+  };
+
+  useFrame(({ clock: c }) => {
+    const g = root.current;
+    if (!g) return;
+    if (!current) {
+      g.visible = false;
+      return;
+    }
+    g.visible = true;
+    const ck = clock.current;
+    const now = c.elapsedTime;
+    if (ck.start < 0) ck.start = current.instant ? now - 60 : now;
+    if (ck.leaveStart === -2) ck.leaveStart = now;
+    const t = now - ck.start;
+
+    // Durées
+    const writeStart = 3.5;
+    const chars = current.title.length + current.author.length + current.phrase.length + 30;
+    const writeDur = THREE.MathUtils.clamp(chars * 0.035, 4, 9);
+    const writeEnd = writeStart + writeDur;
+    const end = writeEnd + 0.7;
+
+    // Apparition, penchée (plus forte pour atteindre l'encrier), sortie
+    let appear = smooth(t / 1.0);
+    const dip = smooth((t - 1.6) / 0.5) * (1 - smooth((t - 3.0) / 0.5));
+    let lean = 0.12 + 0.23 * smooth((t - 0.6) / 0.8) + 0.1 * dip;
+    if (t > writeEnd) lean -= 0.12 * smooth((t - writeEnd) / 0.7);
+    if (ck.leaveStart > 0) {
+      const lt = now - ck.leaveStart;
+      appear *= 1 - smooth(lt / 0.9);
+      lean *= 1 - smooth(lt / 0.6);
+      if (lt > 1) {
+        setCurrent(null);
+        return;
+      }
+    }
+    for (const m of Object.values(mats)) {
+      m.opacity = appear;
+      m.depthWrite = appear > 0.98;
+    }
+    g.position.y = -0.03 * (1 - appear);
+    if (upper.current) upper.current.rotation.x = -lean;
+
+    // Épaules (repère du bureau)
+    const shoulder = (sx: number) =>
+      new THREE.Vector3(P.hip.x + sx * 0.17, P.hip.y + 0.38 * Math.cos(lean), P.hip.z - 0.38 * Math.sin(lean));
+
+    // Trajet de la pointe de la plume
+    let tip = P.rest.clone();
+    if (t < 1.8) tip = P.rest.clone();
+    else if (t < 2.6) tip = P.rest.clone().lerp(P.inkAbove, smooth((t - 1.8) / 0.8));
+    else if (t < 3.0) {
+      const k = Math.sin(((t - 2.6) / 0.4) * Math.PI);
+      tip = P.inkAbove.clone().lerp(P.ink, k);
+    } else if (t < writeStart) {
+      tip = P.inkAbove.clone().lerp(sheetPoint(44, 64, 0.02), smooth((t - 3.0) / (writeStart - 3.0)));
+    } else if (t < writeEnd) {
+      const cur = sheet ? sheet.render((t - writeStart) / writeDur) : { x: 240, y: 300 };
+      const wiggle = Math.sin(t * 38) * 0.004 + Math.abs(Math.sin(t * 9)) * 0.004;
+      tip = sheetPoint(cur.x, cur.y, 0.002 + wiggle);
+    } else {
+      tip = sheetPoint(380, 500, 0.03).lerp(P.rest, smooth((t - writeEnd) / 0.7));
+    }
+    if (t >= writeEnd && sheet && !ck.done) sheet.render(1);
+    if (t >= end && !ck.done) {
+      ck.done = true;
+      onDone?.();
+    }
+
+    // Le regard suit la plume
+    if (head.current) {
+      head.current.rotation.x = -0.18 - 0.12 * dip + 0.25 * lean;
+      head.current.rotation.y = THREE.MathUtils.clamp((tip.x - P.hip.x) * 0.9, -0.5, 0.5);
+      // La longue barbe pivote avec la tête autour de l'axe du buste (buste de révolution :
+      // l'écart à l'habit reste le même), sans suivre l'inclinaison pour ne pas y rentrer.
+      if (beard.current) beard.current.rotation.y = head.current.rotation.y;
+    }
+
+    // Bras droit : la main tient la plume un peu au-dessus et en arrière de la pointe
+    const handTarget = tip.clone().add(new THREE.Vector3(0.012, 0.055, 0.03));
+    const rs = shoulder(1);
+    const re = new THREE.Vector3();
+    const rh = new THREE.Vector3();
+    solveArm(rs, handTarget, 0.3, 0.3, new THREE.Vector3(0.8, -0.7, 0.5), re, rh);
+    placeSegment(segs.current[0], rs, re);
+    placeSegment(segs.current[1], re, rh);
+    hands.current[0]?.position.copy(rh);
+    if (quill.current) {
+      const dir = tip.clone().sub(rh).normalize();
+      quill.current.position.copy(tip);
+      quill.current.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir);
+    }
+    // Bras gauche : la main maintient le bord du pupitre
+    const ls = shoulder(-1);
+    const le = new THREE.Vector3();
+    const lh = new THREE.Vector3();
+    solveArm(ls, P.leftHand, 0.3, 0.3, new THREE.Vector3(-0.5, -0.9, 0.4), le, lh);
+    placeSegment(segs.current[2], ls, le);
+    placeSegment(segs.current[3], le, lh);
+    hands.current[1]?.position.copy(lh);
+  });
+
+  if (!current) return null;
+  const B = P.BOARD;
+  const H = P.hip;
+  return (
+    <group>
+      {/* pupitre incliné et feuillet */}
+      <group position={[B.x, top, B.z]} rotation={[0, B.yaw, 0]}>
+        <group position={[0, P.yOff, 0]} rotation={[B.tilt, 0, 0]}>
+          <mesh material={mats.wood}>
+            <boxGeometry args={[B.w, 0.012, B.d]} />
+          </mesh>
+          <mesh position={[0, 0.0075, 0]} rotation={[-Math.PI / 2, 0, 0]} material={mats.sheet}>
+            <planeGeometry args={[SW, SH]} />
+          </mesh>
+          <mesh position={[0, 0.014, B.d / 2 - 0.008]} material={mats.wood}>
+            <boxGeometry args={[B.w, 0.018, 0.012]} />
+          </mesh>
+        </group>
+        {[-1, 1].map((sx) => (
+          <mesh key={sx} geometry={geo.wedge} position={[sx * (B.w / 2 - 0.012) - 0.006, 0, 0]} rotation={[0, Math.PI / 2, 0]} material={mats.wood} />
+        ))}
+      </group>
+
+      {/* cornet à encre */}
+      <group position={[P.ink.x, top, P.ink.z]}>
+        <mesh position={[0, 0.008, 0]} material={mats.wood}>
+          <cylinderGeometry args={[0.032, 0.036, 0.016, 16]} />
+        </mesh>
+        <mesh position={[0, 0.048, 0]} material={mats.rope}>
+          <cylinderGeometry args={[0.022, 0.013, 0.07, 14]} />
+        </mesh>
+        <mesh position={[0, 0.0835, 0]} rotation={[-Math.PI / 2, 0, 0]} material={mats.eye}>
+          <circleGeometry args={[0.018, 14]} />
+        </mesh>
+      </group>
+
+      {/* corps assis */}
+      <group ref={root}>
+        {/* robe sur l'assise et les cuisses */}
+        <mesh position={[H.x, H.y + 0.01, H.z - 0.02]} scale={[0.23, 0.1, 0.2]} material={mats.robe}>
+          <sphereGeometry args={[1, 20, 14]} />
+        </mesh>
+        {[-1, 1].map((sx) => (
+          <mesh key={sx} position={[H.x + sx * 0.09, H.y - 0.01, H.z - 0.15]} rotation={[Math.PI / 2 - 0.06, 0, 0]} material={mats.robe}>
+            <capsuleGeometry args={[0.085, 0.2, 6, 12]} />
+          </mesh>
+        ))}
+        {/* pan de robe tombant des genoux, plis */}
+        <mesh geometry={geo.skirt} position={[H.x, 0, P.shinZ]} material={mats.robe} />
+        {[-0.12, -0.04, 0.05, 0.13].map((dx, k) => (
+          <mesh key={k} position={[H.x + dx, 0.27, P.shinZ - 0.215 + Math.abs(dx) * 0.25]} rotation={[0.08, 0, dx * 0.6]} material={mats.fold}>
+            <cylinderGeometry args={[0.012, 0.022, 0.52, 6]} />
+          </mesh>
+        ))}
+        {/* sandales */}
+        {[-1, 1].map((sx) => (
+          <group key={sx} position={[H.x + sx * 0.08, 0, P.shinZ - 0.27]}>
+            <mesh position={[0, 0.008, 0]} material={mats.leather}>
+              <boxGeometry args={[0.075, 0.016, 0.13]} />
+            </mesh>
+            <mesh position={[0, 0.03, -0.01]} rotation={[Math.PI / 2, 0, 0]} material={mats.skin}>
+              <capsuleGeometry args={[0.03, 0.06, 4, 10]} />
+            </mesh>
+            <mesh position={[0, 0.042, -0.015]} material={mats.leather}>
+              <boxGeometry args={[0.07, 0.012, 0.018]} />
+            </mesh>
+          </group>
+        ))}
+
+        {/* buste, penché vers le pupitre */}
+        <group ref={upper} position={[H.x, H.y, H.z]}>
+          <mesh geometry={geo.torso} material={mats.robe} />
+          {/* plis du buste */}
+          {[-0.08, 0.08].map((dx) => (
+            <mesh key={dx} position={[dx, 0.2, -0.2]} rotation={[0.1, 0, dx]} material={mats.fold}>
+              <cylinderGeometry args={[0.01, 0.018, 0.34, 6]} />
+            </mesh>
+          ))}
+          {/* cordelière nouée */}
+          <mesh position={[0, 0.05, 0]} rotation={[Math.PI / 2, 0, 0]} material={mats.rope}>
+            <torusGeometry args={[0.205, 0.013, 6, 28]} />
+          </mesh>
+          <group position={[0.1, 0.03, -0.18]} rotation={[0.25, 0, 0.15]}>
+            <mesh position={[0, -0.16, 0]} material={mats.rope}>
+              <cylinderGeometry args={[0.008, 0.008, 0.32, 6]} />
+            </mesh>
+            {[-0.06, -0.16, -0.28].map((y) => (
+              <mesh key={y} position={[0, y, 0]} material={mats.rope}>
+                <sphereGeometry args={[0.016, 8, 8]} />
+              </mesh>
+            ))}
+          </group>
+          {/* chaîne de métaux mêlés, et ses pendeloques sur la poitrine */}
+          {chain.map((l, k) => (
+            <mesh key={k} geometry={geo.link} position={l.p} quaternion={l.q} scale={[1.35, 1, 1]} material={mats[l.metal]} />
+          ))}
+          <mesh position={[0, 0.212, -0.226]} material={mats.gold}>
+            <torusGeometry args={[0.026, 0.006, 8, 22]} />
+          </mesh>
+          <mesh position={[-0.055, 0.235, -0.218]} rotation={[Math.PI / 2, 0, 0]} material={mats.silver}>
+            <cylinderGeometry args={[0.017, 0.017, 0.004, 16]} />
+          </mesh>
+          <mesh position={[0.055, 0.228, -0.219]} rotation={[0, 0, 0.12]} material={mats.iron}>
+            <boxGeometry args={[0.007, 0.045, 0.005]} />
+          </mesh>
+
+          {/* longue barbe posée sur la poitrine (repère du buste, ~1 cm au-dessus de l'habit) :
+              du menton (y 0.50, z −0.145) à la pointe (y 0.30, z −0.258), aplatie contre le buste */}
+          <group ref={beard}>
+            <mesh geometry={geo.beard} position={[0, 0.399, -0.2015]} rotation={[0.5064, 0, 0]} scale={[0.08, 0.2332, 0.04]} material={mats.hair} />
+          </group>
+
+          {/* cou */}
+          <mesh position={[0, 0.45, -0.005]} material={mats.skin}>
+            <cylinderGeometry args={[0.042, 0.05, 0.08, 12]} />
+          </mesh>
+          {/* tête de vieillard : front dégarni, cheveux et longue barbe blancs, regard baissé */}
+          <group ref={head} position={[0, 0.56, -0.015]}>
+            <mesh material={mats.skin}>
+              <sphereGeometry args={[0.095, 20, 16]} />
+            </mesh>
+            {/* couronne de cheveux blancs : des tempes à la nuque, le dessus du crâne dégarni */}
+            <mesh position={[0, 0.025, 0.004]} rotation={[Math.PI / 2 + 0.2, 0, -Math.PI / 6]} material={mats.hair}>
+              <torusGeometry args={[0.088, 0.021, 8, 28, (Math.PI * 4) / 3]} />
+            </mesh>
+            {[-1, 1].map((sx) => (
+              <mesh key={`favori${sx}`} position={[sx * 0.082, -0.012, -0.036]} scale={[0.018, 0.046, 0.03]} material={mats.hair}>
+                <sphereGeometry args={[1, 10, 8]} />
+              </mesh>
+            ))}
+            {/* rides du front */}
+            {[0.05, 0.064].map((y, k) => (
+              <mesh key={`ride${k}`} position={[0, y, 0]} rotation={[Math.PI / 2, 0, -Math.PI / 2 - 0.45]} material={mats.wrinkle}>
+                <torusGeometry args={[Math.sqrt(0.095 * 0.095 - y * y) + 0.0008, 0.0016, 4, 12, 0.9]} />
+              </mesh>
+            ))}
+            <mesh position={[0, -0.03, 0.03]} scale={[0.1, 0.07, 0.085]} material={mats.hair}>
+              <sphereGeometry args={[1, 16, 12]} />
+            </mesh>
+            {[-1, 1].map((sx) => (
+              <mesh key={sx} position={[sx * 0.094, -0.012, 0.004]} scale={[0.014, 0.028, 0.02]} material={mats.skin}>
+                <sphereGeometry args={[1, 10, 8]} />
+              </mesh>
+            ))}
+            {/* barbe de la mâchoire (s'arrête au-dessus des épaules) et moustache tombante ;
+                la longue barbe est posée sur le buste */}
+            <mesh position={[0, -0.062, -0.052]} scale={[0.075, 0.05, 0.065]} material={mats.hair}>
+              <sphereGeometry args={[1, 16, 12]} />
+            </mesh>
+            {[-1, 1].map((sx) => (
+              <mesh key={`moust${sx}`} position={[sx * 0.022, -0.044, -0.088]} rotation={[0, 0, sx * (Math.PI / 2 - 0.45)]} scale={[1, 1, 0.6]} material={mats.hair}>
+                <capsuleGeometry args={[0.009, 0.026, 4, 8]} />
+              </mesh>
+            ))}
+            {/* nez, yeux, sourcils */}
+            <mesh position={[0, -0.014, -0.098]} scale={[0.016, 0.024, 0.018]} material={mats.skin}>
+              <sphereGeometry args={[1, 10, 8]} />
+            </mesh>
+            {[-1, 1].map((sx) => (
+              <group key={sx}>
+                <mesh position={[sx * 0.033, 0.012, -0.083]} material={mats.eye}>
+                  <sphereGeometry args={[0.0075, 8, 8]} />
+                </mesh>
+                <mesh position={[sx * 0.034, 0.029, -0.086]} rotation={[0, 0, sx * -0.2]} material={mats.hair}>
+                  <boxGeometry args={[0.032, 0.01, 0.01]} />
+                </mesh>
+              </group>
+            ))}
+          </group>
         </group>
       </group>
-      {/* chair */}
-      <group position={[0, 0, 1.1]}>
-        <mesh position={[0, 0.48, 0]}>
-          <boxGeometry args={[0.6, 0.08, 0.6]} />
-          <meshStandardMaterial color="#51252c" roughness={0.8} />
+
+      {/* bras : manches larges évasées (repère du bureau, posées à chaque image) */}
+      {[0, 1, 2, 3].map((i) => (
+        <mesh key={i} ref={(el) => { segs.current[i] = el; }} material={i % 2 === 0 ? mats.robe : mats.sleeve}>
+          {i % 2 === 0 ? <cylinderGeometry args={[0.052, 0.06, 1, 12]} /> : <cylinderGeometry args={[0.078, 0.055, 1, 14, 1, true]} />}
         </mesh>
-        <mesh position={[0, 0.95, 0.27]}>
-          <boxGeometry args={[0.6, 0.9, 0.06]} />
-          <meshStandardMaterial color="#3a271b" roughness={0.5} />
+      ))}
+      {[0, 1].map((i) => (
+        <mesh key={i} ref={(el) => { hands.current[i] = el; }} material={mats.skin}>
+          <sphereGeometry args={[0.03, 12, 10]} />
         </mesh>
+      ))}
+      {/* plume : la pointe suit l'écriture */}
+      <group ref={quill}>
+        <mesh position={[0, 0.06, 0]} material={mats.quill}>
+          <cylinderGeometry args={[0.0018, 0.0008, 0.12, 5]} />
+        </mesh>
+        <mesh geometry={geo.feather} position={[0, 0.08, 0]} material={mats.quill} />
+        <mesh geometry={geo.feather} position={[0, 0.08, 0]} rotation={[0, Math.PI / 2, 0]} scale={[0.7, 1, 1]} material={mats.quill} />
+      </group>
+    </group>
+  );
+}
+
+/**
+ * Manuscrit enluminé ouvert : plats de cuir, deux blocs de pages à tranches visibles,
+ * pages courbées vers la gouttière, lettrines, rubriques, miniature et signet.
+ */
+function IlluminatedBook({ onClick }: { onClick?: () => void }) {
+  const fonts = useMemo(() => resolveFonts(), []);
+  const [hovered, setHovered] = useState(false);
+  useCursor(hovered && Boolean(onClick));
+  const tex = useMemo(
+    () => ({ left: illuminatedPageTexture("left", fonts), right: illuminatedPageTexture("right", fonts), edge: pageEdgeTexture() }),
+    [fonts],
+  );
+  const PW = 0.33;
+  const PD = 0.45;
+  const T = 0.028;
+  const pages = useMemo(() => {
+    const make = (side: -1 | 1) => {
+      const geo = new THREE.PlaneGeometry(PW, PD, 32, 1);
+      const pos = geo.attributes.position as THREE.BufferAttribute;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        // distance à la gouttière (côté reliure)
+        const u = side === -1 ? PW / 2 - x : x + PW / 2;
+        const h = 0.016 * (1 - Math.exp(-u / 0.035)) - 0.005 * Math.pow(u / PW, 5);
+        pos.setZ(i, h);
+      }
+      geo.computeVertexNormals();
+      return geo;
+    };
+    return { left: make(-1), right: make(1) };
+  }, []);
+  const edgeMat = useMemo(() => new THREE.MeshStandardMaterial({ map: tex.edge, roughness: 0.9 }), [tex.edge]);
+  const plainMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#e6d6b2", roughness: 0.9 }), []);
+  const blockMats = [edgeMat, edgeMat, plainMat, plainMat, edgeMat, edgeMat];
+  return (
+    <group
+      onClick={(e) => {
+        if (!onClick) return;
+        e.stopPropagation();
+        onClick();
+      }}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHovered(true);
+      }}
+      onPointerOut={() => setHovered(false)}
+    >
+      {[-1, 1].map((side) => (
+        <group key={side} rotation={[0, 0, side * -0.05]}>
+          {/* plat de reliure */}
+          <mesh position={[side * (PW / 2 + 0.006), 0.004, 0]}>
+            <boxGeometry args={[PW + 0.02, 0.008, PD + 0.024]} />
+            <meshStandardMaterial color="#3a1a12" roughness={0.65} />
+          </mesh>
+          {/* bloc de pages */}
+          <mesh position={[side * (PW / 2), 0.008 + T / 2, 0]} material={blockMats}>
+            <boxGeometry args={[PW, T, PD]} />
+          </mesh>
+          {/* page visible, courbée */}
+          <mesh geometry={side === -1 ? pages.left : pages.right} position={[side * (PW / 2), 0.008 + T + 0.0005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <meshStandardMaterial map={side === -1 ? tex.left : tex.right} roughness={0.92} />
+          </mesh>
+        </group>
+      ))}
+      {/* tranchefile et dos */}
+      <mesh position={[0, 0.03, -PD / 2 + 0.006]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.006, 0.006, 0.03, 8]} />
+        <meshStandardMaterial color="#8e1f2c" roughness={0.6} />
+      </mesh>
+      {/* signet rouge : posé dans la gouttière, il retombe sur le bureau */}
+      <mesh position={[0.004, 0.039, 0.05]} rotation={[-Math.PI / 2, 0, 0.04]}>
+        <planeGeometry args={[0.008, PD * 0.92]} />
+        <meshStandardMaterial color="#6e1520" roughness={0.7} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0.012, 0.02, PD / 2 + 0.02]} rotation={[-0.7, 0, 0.04]}>
+        <planeGeometry args={[0.008, 0.06]} />
+        <meshStandardMaterial color="#6e1520" roughness={0.7} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
+}
+
+/**
+ * Fauteuil rococo doré : dossier en arc garni de velours brodé et sommé d'un cartouche,
+ * accoudoirs à volutes et manchettes de velours, assise brodée, ceinture à coquille, pieds galbés dorés.
+ * Repère : l'avant du fauteuil regarde vers −z (vers le bureau), le dossier est vers +z.
+ */
+function RococoArmchair() {
+  const back = useMemo(() => velvetBackTexture(), []);
+  const seat = useMemo(() => velvetSeatTexture(), []);
+  const SEAT_Y = 0.47;
+  const geo = useMemo(() => {
+    // Cadre du dossier : arc extérieur, évidé d'un arc intérieur.
+    const arch = (w: number, h: number, peak: number) => {
+      const sh = new THREE.Shape();
+      sh.moveTo(-w, 0);
+      sh.lineTo(-w * 1.04, h * 0.62);
+      sh.bezierCurveTo(-w * 1.06, h * 1.0, -w * 0.55, h * 1.07, 0, h + peak);
+      sh.bezierCurveTo(w * 0.55, h * 1.07, w * 1.06, h * 1.0, w * 1.04, h * 0.62);
+      sh.lineTo(w, 0);
+      sh.closePath();
+      return sh;
+    };
+    const frame = arch(0.29, 0.72, 0.03);
+    const hole = arch(0.245, 0.66, 0.02);
+    const holePath = new THREE.Path(hole.getPoints(48).map((p) => new THREE.Vector2(p.x, p.y + 0.03)));
+    frame.holes.push(holePath);
+    const backFrame = new THREE.ExtrudeGeometry(frame, { depth: 0.04, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.008, bevelSegments: 3, curveSegments: 32 });
+    // Assise et ceinture : trapèze évasé vers l'avant.
+    const seatShape = (s: number) => {
+      const sh = new THREE.Shape();
+      sh.moveTo(-0.25 * s, 0.25 * s);
+      sh.lineTo(0.25 * s, 0.25 * s);
+      sh.quadraticCurveTo(0.33 * s, -0.02 * s, 0.31 * s, -0.27 * s);
+      sh.quadraticCurveTo(0, -0.3 * s, -0.31 * s, -0.27 * s);
+      sh.quadraticCurveTo(-0.33 * s, -0.02 * s, -0.25 * s, 0.25 * s);
+      return sh;
+    };
+    const rail = seatShape(1.04);
+    rail.holes.push(new THREE.Path(seatShape(0.86).getPoints(40)));
+    const railGeo = new THREE.ExtrudeGeometry(rail, { depth: 0.07, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 2, curveSegments: 24 });
+    const cushion = new THREE.ExtrudeGeometry(seatShape(0.98), { depth: 0.06, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 4, curveSegments: 24 });
+    // Accoudoir : courbe du dossier vers l'avant, terminée en volute ; support jusqu'à la ceinture.
+    const armCurve = new THREE.CatmullRomCurve3(
+      [[0, 0.62, 0.2], [0.01, 0.65, 0.05], [0.0, 0.64, -0.12], [0.0, 0.6, -0.22], [0.0, 0.56, -0.25], [0.0, 0.53, -0.22]].map((p) => new THREE.Vector3(...p)),
+    );
+    const postCurve = new THREE.CatmullRomCurve3(
+      [[0, 0.56, -0.2], [0, 0.52, -0.16], [0, 0.48, -0.19], [0, 0.44, -0.22]].map((p) => new THREE.Vector3(...p)),
+    );
+    return { backFrame, railGeo, cushion, armCurve, postCurve };
+  }, []);
+
+  return (
+    <group>
+      {/* pieds galbés dorés (le pied de bureau, réduit) */}
+      <group scale={[1, 0.68, 1]}>
+        {[[-0.24, -0.22], [0.24, -0.22], [-0.22, 0.2], [0.22, 0.2]].map(([x, z]) => (
+          <CabrioleLeg key={`${x}${z}`} x={x} z={z} gilt />
+        ))}
+      </group>
+      {/* ceinture dorée et coquille centrale */}
+      <mesh geometry={geo.railGeo} position={[0, SEAT_Y - 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <meshStandardMaterial {...GILDING} />
+      </mesh>
+      <group position={[0, SEAT_Y - 0.035, -0.29]}>
+        {Array.from({ length: 7 }, (_, k) => (
+          <mesh key={k} rotation={[0, 0, ((k - 3) / 3) * 0.9]} position={[0, -0.02, 0]}>
+            <boxGeometry args={[0.012, 0.08, 0.012]} />
+            <meshStandardMaterial {...GILDING} />
+          </mesh>
+        ))}
+        <mesh position={[0, -0.05, 0]}>
+          <sphereGeometry args={[0.018, 10, 10]} />
+          <meshStandardMaterial {...GILDING} />
+        </mesh>
+      </group>
+      {/* coussin de velours et dessus brodé */}
+      <mesh geometry={geo.cushion} position={[0, SEAT_Y + 0.0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <meshStandardMaterial color="#86192a" roughness={0.95} />
+      </mesh>
+      <mesh position={[0, SEAT_Y + 0.082, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[0.66, 0.6]} />
+        <meshStandardMaterial map={seat} roughness={0.92} transparent alphaTest={0.5} />
+      </mesh>
+      {/* dossier légèrement incliné vers l'arrière */}
+      <group position={[0, SEAT_Y + 0.06, 0.24]} rotation={[-0.12, Math.PI, 0]}>
+        <mesh geometry={geo.backFrame} position={[0, 0, -0.02]}>
+          <meshStandardMaterial {...GILDING} />
+        </mesh>
+        <mesh position={[0, 0.39, 0]}>
+          <planeGeometry args={[0.5, 0.72]} />
+          <meshStandardMaterial map={back} roughness={0.93} transparent alphaTest={0.5} side={THREE.DoubleSide} />
+        </mesh>
+        {/* cartouche sculpté au sommet */}
+        <group position={[0, 0.79, 0.01]}>
+          <mesh scale={[0.06, 0.075, 0.025]}>
+            <sphereGeometry args={[1, 16, 12]} />
+            <meshStandardMaterial {...GILDING} />
+          </mesh>
+          {[-1, 1].map((sx) => (
+            <group key={sx}>
+              <mesh position={[sx * 0.085, -0.025, 0]} rotation={[0, 0, sx * 0.5]}>
+                <torusGeometry args={[0.035, 0.01, 6, 14, Math.PI * 1.3]} />
+                <meshStandardMaterial {...GILDING} />
+              </mesh>
+              <mesh position={[sx * 0.14, -0.05, 0]}>
+                <sphereGeometry args={[0.02, 10, 10]} />
+                <meshStandardMaterial {...GILDING} />
+              </mesh>
+              <mesh position={[sx * 0.045, 0.06, 0]}>
+                <sphereGeometry args={[0.016, 10, 10]} />
+                <meshStandardMaterial {...GILDING} />
+              </mesh>
+            </group>
+          ))}
+        </group>
+      </group>
+      {/* accoudoirs */}
+      {[-1, 1].map((sx) => (
+        <group key={sx} position={[sx * 0.3, 0, 0]}>
+          <mesh>
+            <tubeGeometry args={[geo.armCurve, 40, 0.018, 8, false]} />
+            <meshStandardMaterial {...GILDING} />
+          </mesh>
+          <mesh>
+            <tubeGeometry args={[geo.postCurve, 20, 0.016, 8, false]} />
+            <meshStandardMaterial {...GILDING} />
+          </mesh>
+          {/* volute de l'accoudoir */}
+          <mesh position={[0, 0.555, -0.235]} rotation={[0, Math.PI / 2, 0]}>
+            <torusGeometry args={[0.022, 0.009, 6, 16]} />
+            <meshStandardMaterial {...GILDING} />
+          </mesh>
+          {/* manchette de velours */}
+          <mesh position={[0, 0.66, -0.02]} rotation={[Math.PI / 2, 0, 0]}>
+            <capsuleGeometry args={[0.03, 0.2, 6, 12]} />
+            <meshStandardMaterial color="#8a1c2a" roughness={0.95} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+/**
+ * Bureau plat de style Louis XV : plateau de noyer garni de cuir à filet doré, lingotière dorée,
+ * ceinture à trois tiroirs, pieds cambrés à espagnolettes et sabots dorés.
+ * Sur le plateau : le livre ouvert, l'encrier et sa plume (à droite du livre),
+ * le chandelier à trois branches (arrière droit) et le globe (arrière gauche).
+ */
+function ReadingDesk({ copyist, onBook, onDone }: { copyist: CopyistNote | null; onBook?: () => void; onDone?: () => void }) {
+  // Tout le bureau (manuscrit, meubles) appelle le copiste : depuis le hall, le fauteuil masque le livre.
+  const [hovered, setHovered] = useState(false);
+  useCursor(hovered && Boolean(onBook) && !copyist);
+  const wood = useMemo(() => woodTexture("#3b1f14", 77), []);
+  const leather = useMemo(() => leatherTexture(), []);
+  const W = 2.4;
+  const D = 1.2;
+  const TOP = 0.82;
+  return (
+    <group
+      position={[0, 0, 1]}
+      onClick={(e) => {
+        if (!onBook || copyist) return;
+        e.stopPropagation();
+        onBook();
+      }}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHovered(true);
+      }}
+      onPointerOut={() => setHovered(false)}
+    >
+      {/* plateau mouluré et lingotière dorée */}
+      <mesh position={[0, TOP - 0.025, 0]}>
+        <boxGeometry args={[W, 0.05, D]} />
+        <meshStandardMaterial map={wood} color="#6a3a24" roughness={0.32} />
+      </mesh>
+      {[[0, D / 2 + 0.004, W + 0.01, 0.008], [0, -D / 2 - 0.004, W + 0.01, 0.008]].map(([x, z, w, d], i) => (
+        <mesh key={`lz${i}`} position={[x, TOP - 0.025, z]}>
+          <boxGeometry args={[w, 0.03, d]} />
+          <meshStandardMaterial {...GILT} />
+        </mesh>
+      ))}
+      {[W / 2 + 0.004, -W / 2 - 0.004].map((x, i) => (
+        <mesh key={`lx${i}`} position={[x, TOP - 0.025, 0]}>
+          <boxGeometry args={[0.008, 0.03, D + 0.01]} />
+          <meshStandardMaterial {...GILT} />
+        </mesh>
+      ))}
+      {/* cuir */}
+      <mesh position={[0, TOP + 0.001, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[W - 0.24, D - 0.24]} />
+        <meshStandardMaterial map={leather} roughness={0.7} />
+      </mesh>
+
+      {/* ceinture et tiroirs (façade et revers) */}
+      <mesh position={[0, 0.71, 0]}>
+        <boxGeometry args={[W - 0.14, 0.17, D - 0.12]} />
+        <meshStandardMaterial map={wood} color="#5a3220" roughness={0.38} />
+      </mesh>
+      {([1, -1] as const).map((face) =>
+        [-0.75, 0, 0.75].map((x) => <Drawer key={`${face}${x}`} x={x} z={face * ((D - 0.12) / 2)} w={x === 0 ? 0.72 : 0.56} face={face} />),
+      )}
+      {/* rocaille dorée au centre de la ceinture */}
+      {([1, -1] as const).map((face) => (
+        <mesh key={`roc${face}`} position={[0, 0.63, face * ((D - 0.12) / 2 + 0.012)]} rotation={[0, 0, 0]} scale={[1.6, 1, 0.5]}>
+          <torusGeometry args={[0.035, 0.01, 6, 16, Math.PI]} />
+          <meshStandardMaterial {...GILT} />
+        </mesh>
+      ))}
+
+      {/* pieds cambrés */}
+      {[[-1.06, -0.48], [1.06, -0.48], [-1.06, 0.48], [1.06, 0.48]].map(([x, z]) => (
+        <CabrioleLeg key={`${x}${z}`} x={x} z={z} wood={wood} />
+      ))}
+
+      {/* manuscrit enluminé ouvert */}
+      <group position={[0, TOP, 0.05]}>
+        <IlluminatedBook />
+      </group>
+      {/* le moine copiste, appelé par un clic sur le manuscrit */}
+      <Copyist note={copyist} top={TOP} onDone={onDone} />
+
+      {/* encrier et plume, à droite du livre */}
+      <group position={[0.56, TOP, 0.14]}>
+        <Inkwell />
+      </group>
+      {/* chandelier à trois branches, arrière droit */}
+      <group position={[0.78, TOP, -0.32]} rotation={[0, -0.35, 0]}>
+        <Candelabra />
+      </group>
+      {/* globe, arrière gauche */}
+      <group position={[-0.82, TOP, -0.3]} rotation={[0, 0.6, 0]}>
+        <Globe />
+      </group>
+
+      {/* fauteuil rococo, tourné vers le bureau */}
+      <group position={[0, 0, 1.05]}>
+        <RococoArmchair />
       </group>
     </group>
   );
@@ -594,7 +1749,7 @@ function Bookcase({
   const wood = useMemo(() => woodTexture("#2d1f17", index * 13 + 1), [index]);
   const plaque = useMemo(() => plaqueTexture(shelf.name, shelf.inscription, shelf.accent, fonts), [shelf, fonts]);
   const [hoverCase, setHoverCase] = useState(false);
-  const focused = view.kind !== "hall" && view.kind !== "intro" && view.shelf === index;
+  const focused = (view.kind === "shelf" || view.kind === "book") && view.shelf === index;
   useCursor(hoverCase && !focused);
 
   const W = CASE.width;

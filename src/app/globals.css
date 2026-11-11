@@ -443,14 +443,16 @@ html[data-motion="reduced"] *, html[data-motion="reduced"] *::before, html[data-
     aspect-ratio: 140 / 320;
     margin-bottom: calc(min(36svh, 440px) * 0.06);
   }
-  .threshold-glass {
+  .threshold-glass, .threshold-rose {
     filter: brightness(0.16) saturate(0.5);
     transition: filter 2.6s var(--ease-quill);
   }
-  .threshold-window[data-lit="true"] .threshold-glass {
+  .threshold-window[data-lit="true"] .threshold-glass,
+  .threshold:not([data-phase="dark"]) .threshold-rose {
     filter: brightness(1.04) saturate(1.12) drop-shadow(0 0 18px rgb(70 100 190 / 0.28)) drop-shadow(0 0 36px rgb(190 110 50 / 0.16));
   }
-  .threshold[data-phase="opening"] .threshold-window .threshold-glass {
+  .threshold[data-phase="opening"] .threshold-window .threshold-glass,
+  .threshold[data-phase="opening"] .threshold-rose {
     filter: brightness(1.5) saturate(1.2) drop-shadow(0 0 30px rgb(255 210 140 / 0.45));
   }
   .vitrail-sun { animation: vitrail-shimmer 9s ease-in-out infinite; }
@@ -491,3 +493,19 @@ html[data-motion="reduced"] *, html[data-motion="reduced"] *::before, html[data-
   35% { transform: scale(0.92, 1.08); opacity: 0.85; }
   70% { transform: scale(1.05, 0.95); opacity: 0.95; }
 }
+
+/* Sceau de l'accueil : révèle la page après son chargement et le tracé du blason. */
+.home-preloader { opacity: 1; transition: opacity 650ms ease-out; }
+.home-preloader[data-ready="true"] { opacity: 0; pointer-events: none; }
+.seal-outline {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 8px rgb(239 210 148 / 0.6));
+  animation: seal-draw 1.4s ease-in-out forwards;
+  animation-play-state: paused;
+}
+.seal-arms { animation: seal-reveal 1.4s ease-out both paused; }
+.home-preloader[data-started="true"] .seal-outline,
+.home-preloader[data-started="true"] .seal-arms { animation-play-state: running; }
+@keyframes seal-draw { to { stroke-dashoffset: 0; } }
+@keyframes seal-reveal { from { opacity: 0.15; } to { opacity: 1; } }

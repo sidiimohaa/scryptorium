@@ -3,7 +3,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Emblem } from "../Emblem";
-import type { SceneShelf, View } from "./types";
+import type { CopyistNote, SceneShelf, View } from "./types";
 
 const LibraryScene = dynamic(() => import("./LibraryScene"), { ssr: false, loading: () => null });
 
@@ -49,6 +49,14 @@ export function LibraryExperience({
   const [fontsReady, setFontsReady] = useState(false);
   const [view, setView] = useState<View>({ kind: "intro" });
   const [veil, setVeil] = useState(entrance);
+  const [copyist, setCopyist] = useState<CopyistNote | null>(null);
+  const [copyistDone, setCopyistDone] = useState(false);
+  const [copyistSlug, setCopyistSlug] = useState<string | null>(null);
+  // Quitter la vue du bureau congédie le copiste (ajusté pendant le rendu, sans effet).
+  if (copyist && view.kind !== "desk") {
+    setCopyist(null);
+    setCopyistDone(false);
+  }
   const pending = useRef<View | null>(null);
 
   // Resolve deep links (?livre= / ?rayon=) into a target view.
@@ -111,15 +119,42 @@ export function LibraryExperience({
   }, []);
 
   const back = useCallback(() => {
+    setCopyist(null);
+    setCopyistDone(false);
     setView((v) => (v.kind === "book" ? { kind: "shelf", shelf: v.shelf } : { kind: "hall" }));
   }, []);
+
+  /**
+   * Le copiste choisit un vrai livre de la bibliothèque, déjà lu et doté d'une fiche,
+   * et recopie la première phrase de cette fiche (jamais de texte inventé).
+   */
+  const summonCopyist = useCallback(
+    (instant = false) => {
+      const firstSentence = (text: string) => {
+        const clean = text.replace(/\s+/g, " ").trim();
+        const m = clean.match(/^(.{40,190}?[.!?])(\s|$)/);
+        const s = m ? m[1] : clean.slice(0, 170);
+        return s.length < clean.length && !m ? `${s.replace(/\s+\S*$/, "")}…` : s;
+      };
+      const candidates = Object.values(books).filter((b) => b.excerpt.length > 40 && b.slug !== copyistSlug);
+      const pool = candidates.length ? candidates : Object.values(books).filter((b) => b.excerpt.length > 40);
+      if (!pool.length) return;
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      const reduced = document.documentElement.dataset.motion === "reduced" || matchMedia("(prefers-reduced-motion: reduce)").matches;
+      setCopyistSlug(pick.slug);
+      setCopyistDone(false);
+      setCopyist({ key: Date.now(), title: pick.title, author: pick.author, year: pick.year, phrase: firstSentence(pick.excerpt), instant: instant || reduced });
+      setView({ kind: "desk" });
+    },
+    [books, copyistSlug],
+  );
 
   // Keyboard exploration (optional): ←/→ between shelves, Échap to step back, H for the hall.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === "Escape") back();
-      if (e.key.toLowerCase() === "h") setView({ kind: "hall" });
+      if (e.key.toLowerCase() === "h") back();
       if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
         const d = e.key === "ArrowRight" ? 1 : -1;
         setView((v) => {
@@ -160,6 +195,9 @@ export function LibraryExperience({
             onDecline={() => setLowPower(true)}
             entrance={entrance}
             onReady={onReady}
+            copyist={copyist}
+            onDeskBook={() => summonCopyist()}
+            onCopyistDone={() => setCopyistDone(true)}
           />
         )}
       </div>
@@ -188,11 +226,6 @@ export function LibraryExperience({
         </div>
       </div>
 
-      {/* Intro caption */}
-      <div className={`pointer-events-none absolute inset-x-0 top-1/3 text-center transition-opacity duration-1000 ${view.kind === "intro" ? "opacity-100" : "opacity-0"}`}>
-        <p className="eyebrow">Les portes s&apos;ouvrent</p>
-      </div>
-
       {/* Shelf caption */}
       {currentShelf && view.kind === "shelf" && (
         <div className="pointer-events-none absolute inset-x-0 top-20 text-center rise">
@@ -204,11 +237,36 @@ export function LibraryExperience({
           <Link href={`/rayonnages/${currentShelf.slug}`} className="pointer-events-auto link-gilt mt-3 inline-block text-xs uppercase tracking-[0.2em] text-gold">Liste du rayonnage</Link>
         </div>
       )}
-      {view.kind === "hall" && (
-        <div className="pointer-events-none absolute inset-x-0 top-24 text-center rise">
-          <p className="eyebrow">La salle principale</p>
-          <p className="mt-3 font-[family-name:var(--font-serif)] text-lg italic text-parchment/80">Choisissez un rayonnage — d&apos;un clic, ou avec les flèches du clavier.</p>
-        </div>
+      {/* Consigne gardée pour les lecteurs d'écran uniquement (retirée de l'affichage). */}
+      <p className="sr-only" aria-live="polite">
+        {view.kind === "hall" ? "Salle principale. Choisissez un rayonnage d'un clic, ou avec les flèches gauche et droite du clavier." : ""}
+      </p>
+
+      {/* Le copiste : passer l'animation, puis sa recommandation */}
+      {copyist && !copyistDone && (
+        <button
+          type="button"
+          onClick={() => setCopyist((c) => (c ? { ...c, key: c.key + 1, instant: true } : c))}
+          className="btn btn-ghost absolute bottom-24 right-6 z-20 px-3 py-2 text-[0.62rem]"
+        >
+          Passer
+        </button>
+      )}
+      {copyist && copyistDone && copyistSlug && (
+        <aside aria-label="Recommandation du copiste" className="panel rise absolute inset-x-3 bottom-24 z-20 p-6 md:inset-x-auto md:bottom-auto md:right-8 md:top-1/2 md:w-[360px] md:-translate-y-1/2 md:p-7">
+          <p className="eyebrow">Le copiste vous recommande</p>
+          <h2 className="display mt-3 text-3xl">{copyist.title}</h2>
+          <p className="mt-1 font-[family-name:var(--font-serif)] italic text-gold-bright">
+            {copyist.author}{copyist.year ? `, ${copyist.year}` : ""}
+          </p>
+          <p className="mt-4 font-[family-name:var(--font-serif)] leading-relaxed text-parchment/85">« {copyist.phrase} »</p>
+          <p className="mt-2 text-xs text-muted">Extrait de la fiche du bibliothécaire.</p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Link href={`/livres/${copyistSlug}`} className="btn px-4 py-2.5">Ouvrir la fiche</Link>
+            <button type="button" onClick={() => summonCopyist()} className="btn btn-ghost px-4 py-2.5">Une autre</button>
+            <button type="button" onClick={back} className="btn btn-ghost px-4 py-2.5">Remercier le copiste</button>
+          </div>
+        </aside>
       )}
 
       {/* Book sheet */}

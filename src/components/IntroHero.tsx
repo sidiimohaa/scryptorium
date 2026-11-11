@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { Arms } from "./Emblem";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { RoseWindow } from "./RoseWindow";
 import { StainedGlass } from "./StainedGlass";
+import { HomePreloader } from "./HomePreloader";
 
 type Phase = "dark" | "glow" | "inscription" | "ready" | "opening";
 
@@ -19,6 +20,8 @@ const reducedMotion = () =>
  * Séquence complète à la première visite, instantanée ensuite (rejouable).
  */
 export function IntroHero() {
+  const [homeReady, setHomeReady] = useState(false);
+  const onPreloaderComplete = useCallback(() => setHomeReady(true), []);
   const [phase, setPhase] = useState<Phase>("dark");
   const router = useRouter();
   const camera = useRef<HTMLDivElement>(null);
@@ -39,6 +42,7 @@ export function IntroHero() {
 
   useEffect(() => {
     router.prefetch("/bibliotheque");
+    if (!homeReady) return;
     let visited = false;
     try {
       visited = localStorage.getItem("scr-visited") === "1";
@@ -50,7 +54,7 @@ export function IntroHero() {
     }
     return play();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [homeReady]);
 
   const enter = () => {
     if (phase === "opening") return;
@@ -71,9 +75,12 @@ export function IntroHero() {
   const opening = phase === "opening";
 
   return (
+    <>
+    <HomePreloader onComplete={onPreloaderComplete} />
     <section
       aria-label="Entrée de la bibliothèque"
       data-phase={phase}
+      inert={!homeReady}
       className="threshold relative isolate flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-4 py-4"
     >
       {/* Wall: dark wainscot + vignette */}
@@ -85,7 +92,7 @@ export function IntroHero() {
         className="relative z-10 flex flex-col items-center text-center transition-all duration-[1400ms] ease-[var(--ease-quill)]"
         style={{ opacity: inscription && !opening ? 1 : 0, transform: inscription ? "none" : "translateY(-10px)", filter: inscription ? "none" : "blur(6px)" }}
       >
-        <Arms preload className="threshold-arms h-[clamp(6rem,17svh,13rem)] w-auto" />
+        <RoseWindow className="threshold-rose h-[clamp(6rem,17svh,13rem)] w-auto" />
         <h1 className="threshold-title display mt-1 text-[clamp(1.6rem,4.8vw,3.4rem)] tracking-[0.3em]" style={{ paddingLeft: "0.3em" }}>
           SCRYPTORIUM
         </h1>
@@ -197,6 +204,7 @@ export function IntroHero() {
         )}
       </div>
     </section>
+    </>
   );
 }
 
