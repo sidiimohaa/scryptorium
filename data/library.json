@@ -14,7 +14,7 @@
       "year": 1926,
       "pages": null,
       "isbn": null,
-      "coverUrl": "https://covers.openlibrary.org/b/id/13151356-L.jpg",
+      "coverUrl": "/uploads/covers/le-meurtre-de-roger-ackroyd.png",
       "color": "#5A1F27",
       "genres": [
         "Roman policier",
@@ -47,13 +47,13 @@
         "title": "manual",
         "originalTitle": "wikidata",
         "year": "openlibrary",
-        "coverUrl": "openlibrary",
+        "coverUrl": "drive",
         "summary": "drive",
         "spoilerAnalysis": "scryptorium",
         "rating": "drive"
       },
       "createdAt": "2026-11-08T23:34:16.239Z",
-      "updatedAt": "2026-11-09T00:25:11.834Z"
+      "updatedAt": "2026-11-10T02:04:44.654Z"
     },
     {
       "id": "024f78b2-e487-4bf8-b453-b89831aa3db3",
@@ -68,7 +68,7 @@
       "year": 1960,
       "pages": null,
       "isbn": null,
-      "coverUrl": "https://covers.openlibrary.org/b/id/538926-L.jpg",
+      "coverUrl": "/uploads/covers/la-promesse-de-l-aube.jpg",
       "color": "#2F3B2E",
       "genres": [],
       "themes": [],
@@ -93,11 +93,11 @@
         "summary": "drive",
         "year": "openlibrary",
         "rating": "drive",
-        "coverUrl": "openlibrary",
+        "coverUrl": "drive",
         "categoryIds": "auto"
       },
       "createdAt": "2026-11-09T00:06:13.178Z",
-      "updatedAt": "2026-11-09T00:25:11.807Z"
+      "updatedAt": "2026-11-10T02:04:44.638Z"
     },
     {
       "id": "f7b59030-5d8e-4f6f-8883-f7fd62703f81",
@@ -112,7 +112,7 @@
       "year": 1991,
       "pages": null,
       "isbn": null,
-      "coverUrl": "https://covers.openlibrary.org/b/id/969854-L.jpg",
+      "coverUrl": "/uploads/covers/tous-les-matins-du-monde.jpg",
       "color": "#5A1F27",
       "genres": [],
       "themes": [],
@@ -137,11 +137,11 @@
         "summary": "drive",
         "year": "openlibrary",
         "rating": "drive",
-        "coverUrl": "openlibrary",
+        "coverUrl": "drive",
         "categoryIds": "auto"
       },
       "createdAt": "2026-11-09T00:06:13.188Z",
-      "updatedAt": "2026-11-09T00:25:11.812Z"
+      "updatedAt": "2026-11-10T02:04:44.647Z"
     },
     {
       "id": "c0a80a22-434b-401b-bd29-33a8fe67c65b",
@@ -156,7 +156,7 @@
       "year": 1942,
       "pages": null,
       "isbn": null,
-      "coverUrl": "https://covers.openlibrary.org/b/id/5548285-L.jpg",
+      "coverUrl": "/uploads/covers/le-joueur-d-echecs.jpg",
       "color": "#283447",
       "genres": [],
       "themes": [],
@@ -183,10 +183,10 @@
         "categoryIds": "auto",
         "year": "wikidata",
         "originalTitle": "wikidata",
-        "coverUrl": "openlibrary"
+        "coverUrl": "drive"
       },
       "createdAt": "2026-11-09T00:06:13.191Z",
-      "updatedAt": "2026-11-09T00:25:11.814Z"
+      "updatedAt": "2026-11-10T02:04:44.648Z"
     },
     {
       "id": "29920d68-5a62-4cf8-8ef8-997eaa0d3b7b",
@@ -201,7 +201,7 @@
       "year": 1867,
       "pages": null,
       "isbn": null,
-      "coverUrl": "https://covers.openlibrary.org/b/id/15240740-L.jpg",
+      "coverUrl": "/uploads/covers/le-joueur.jpg",
       "color": "#5A1F27",
       "genres": [],
       "themes": [],
@@ -228,10 +228,10 @@
         "rating": "drive",
         "originalTitle": "wikidata",
         "categoryIds": "auto",
-        "coverUrl": "openlibrary"
+        "coverUrl": "drive"
       },
       "createdAt": "2026-11-09T00:06:13.195Z",
-      "updatedAt": "2026-11-09T00:25:11.815Z"
+      "updatedAt": "2026-11-10T02:04:44.648Z"
     },
     {
       "id": "179d5208-4d2a-4d0b-9fb4-ae0023b2b36e",
@@ -246,7 +246,7 @@
       "year": 2000,
       "pages": null,
       "isbn": null,
-      "coverUrl": "https://covers.openlibrary.org/b/id/3111327-L.jpg",
+      "coverUrl": "/uploads/covers/un-ete-pourri.jpg",
       "color": "#5C3A1E",
       "genres": [],
       "themes": [],
@@ -272,11 +272,11 @@
         "summary": "drive",
         "year": "openlibrary",
         "rating": "drive",
-        "coverUrl": "openlibrary",
+        "coverUrl": "drive",
         "categoryIds": "auto"
       },
       "createdAt": "2026-11-09T00:06:13.197Z",
-      "updatedAt": "2026-11-09T00:25:11.828Z"
+      "updatedAt": "2026-11-10T02:04:44.649Z"
     },
     {
       "id": "73fd1b39-946d-4124-b9fa-e2075ecbbafc",
@@ -291,7 +291,7 @@
       "year": 1922,
       "pages": null,
       "isbn": null,
-      "coverUrl": null,
+      "coverUrl": "/uploads/covers/lettre-d-une-inconnue.png",
       "color": "#4A3420",
       "genres": [],
       "themes": [],
@@ -318,10 +318,11 @@
         "year": "drive",
         "rating": "drive",
         "originalTitle": "wikidata",
-        "categoryIds": "auto"
+        "categoryIds": "auto",
+        "coverUrl": "drive"
       },
       "createdAt": "2026-11-09T00:06:13.202Z",
-      "updatedAt": "2026-11-09T00:25:11.840Z"
+      "updatedAt": "2026-11-10T02:04:44.655Z"
     },
     {
       "id": "7e5d94e8-6613-4b83-9b82-ccd0e37ba2e0",
@@ -336,7 +337,7 @@
       "year": 1937,
       "pages": null,
       "isbn": null,
-      "coverUrl": "https://covers.openlibrary.org/b/id/14319003-L.jpg",
+      "coverUrl": "/uploads/covers/des-souris-et-des-hommes.png",
       "color": "#3B2A3F",
       "genres": [],
       "themes": [],
@@ -363,10 +364,10 @@
         "rating": "drive",
         "originalTitle": "wikidata",
         "categoryIds": "auto",
-        "coverUrl": "openlibrary"
+        "coverUrl": "drive"
       },
       "createdAt": "2026-11-09T00:06:13.204Z",
-      "updatedAt": "2026-11-09T00:25:11.847Z"
+      "updatedAt": "2026-11-10T02:04:44.658Z"
     },
     {
       "id": "59236e8d-37c6-4b5d-b698-dbb240182128",
@@ -381,7 +382,7 @@
       "year": 1945,
       "pages": null,
       "isbn": null,
-      "coverUrl": "https://covers.openlibrary.org/b/id/13147152-L.jpg",
+      "coverUrl": "/uploads/covers/la-ferme-des-animaux.png",
       "color": "#5A1F27",
       "genres": [],
       "themes": [],
@@ -406,12 +407,12 @@
         "summary": "drive",
         "year": "drive",
         "rating": "drive",
-        "coverUrl": "openlibrary",
+        "coverUrl": "drive",
         "originalTitle": "wikidata",
         "categoryIds": "auto"
       },
       "createdAt": "2026-11-09T00:06:13.206Z",
-      "updatedAt": "2026-11-09T00:25:11.855Z"
+      "updatedAt": "2026-11-10T02:04:44.663Z"
     },
     {
       "id": "f5429337-52b3-4209-a6c5-95ef56dd4d95",
@@ -426,7 +427,7 @@
       "year": null,
       "pages": null,
       "isbn": null,
-      "coverUrl": null,
+      "coverUrl": "/uploads/covers/lettre-a-nour.jpg",
       "color": "#5A1F27",
       "genres": [],
       "themes": [],
@@ -448,10 +449,11 @@
         "author": "drive",
         "summary": "drive",
         "rating": "drive",
-        "categoryIds": "auto"
+        "categoryIds": "auto",
+        "coverUrl": "drive"
       },
       "createdAt": "2026-11-09T00:06:13.207Z",
-      "updatedAt": "2026-11-09T00:25:11.857Z"
+      "updatedAt": "2026-11-10T02:04:44.665Z"
     },
     {
       "id": "86cff2b4-827e-4253-9952-c862fcf45251",
@@ -466,7 +468,7 @@
       "year": 1886,
       "pages": null,
       "isbn": null,
-      "coverUrl": "https://covers.openlibrary.org/b/id/3068593-L.jpg",
+      "coverUrl": "/uploads/covers/l-etrange-cas-du-dr-jekyll-et-de-mr-hyde.png",
       "color": "#5A1F27",
       "genres": [],
       "themes": [],
@@ -493,11 +495,11 @@
         "summary": "drive",
         "year": "drive",
         "rating": "drive",
-        "coverUrl": "openlibrary",
+        "coverUrl": "drive",
         "categoryIds": "auto"
       },
       "createdAt": "2026-11-09T00:06:13.209Z",
-      "updatedAt": "2026-11-09T00:25:11.858Z"
+      "updatedAt": "2026-11-10T02:04:44.666Z"
     },
     {
       "id": "28c0ab9e-65fd-4a51-b1e1-be425d82afe3",
@@ -512,7 +514,7 @@
       "year": 2002,
       "pages": null,
       "isbn": null,
-      "coverUrl": "https://covers.openlibrary.org/b/id/5482245-L.jpg",
+      "coverUrl": "/uploads/covers/visage-retrouve.png",
       "color": "#1F3A3A",
       "genres": [],
       "themes": [],
@@ -538,11 +540,11 @@
         "summary": "drive",
         "year": "drive",
         "rating": "drive",
-        "coverUrl": "openlibrary",
+        "coverUrl": "drive",
         "categoryIds": "auto"
       },
       "createdAt": "2026-11-09T00:06:13.211Z",
-      "updatedAt": "2026-11-09T00:25:11.858Z"
+      "updatedAt": "2026-11-10T02:04:44.667Z"
     },
     {
       "id": "e28351dc-3c48-49cc-9943-81225f3ce41f",
@@ -557,7 +559,7 @@
       "year": 2010,
       "pages": null,
       "isbn": null,
-      "coverUrl": "https://covers.openlibrary.org/b/id/10352655-L.jpg",
+      "coverUrl": "/uploads/covers/ce-que-le-jour-doit-a-la-nuit.png",
       "color": "#1F3A3A",
       "genres": [],
       "themes": [],
@@ -583,11 +585,11 @@
         "summary": "drive",
         "year": "wikidata",
         "rating": "drive",
-        "coverUrl": "openlibrary",
+        "coverUrl": "drive",
         "categoryIds": "auto"
       },
       "createdAt": "2026-11-09T00:06:13.212Z",
-      "updatedAt": "2026-11-09T00:25:11.859Z"
+      "updatedAt": "2026-11-10T02:04:44.670Z"
     },
     {
       "id": "3062758a-2aba-4d71-b22f-512a6f078527",
@@ -602,7 +604,7 @@
       "year": 1830,
       "pages": null,
       "isbn": null,
-      "coverUrl": null,
+      "coverUrl": "/uploads/covers/l-elixir-de-longue-vie.jpg",
       "color": "#283447",
       "genres": [],
       "themes": [],
@@ -627,10 +629,11 @@
         "author": "drive",
         "summary": "drive",
         "year": "drive",
-        "categoryIds": "auto"
+        "categoryIds": "auto",
+        "coverUrl": "https://www.livredepoche.com/livre/lelixir-de-longue-vie-9782253193159/"
       },
       "createdAt": "2026-11-09T00:06:13.214Z",
-      "updatedAt": "2026-11-09T00:25:11.862Z"
+      "updatedAt": "2026-11-10T02:06:21.819Z"
     },
     {
       "id": "ce80ecd8-9fcc-496b-aa2d-4365d1336cc8",
@@ -645,7 +648,7 @@
       "year": 1818,
       "pages": null,
       "isbn": null,
-      "coverUrl": "https://covers.openlibrary.org/b/id/12356249-L.jpg",
+      "coverUrl": "/uploads/covers/frankenstein.png",
       "color": "#5C3A1E",
       "genres": [],
       "themes": [],
@@ -673,11 +676,11 @@
         "year": "drive",
         "rating": "drive",
         "originalTitle": "openlibrary",
-        "coverUrl": "openlibrary",
+        "coverUrl": "drive",
         "categoryIds": "auto"
       },
       "createdAt": "2026-11-09T00:06:13.236Z",
-      "updatedAt": "2026-11-09T00:25:11.864Z"
+      "updatedAt": "2026-11-10T02:04:44.672Z"
     },
     {
       "id": "fb3760f1-0209-4260-ba49-1cd119698d0b",
@@ -692,7 +695,7 @@
       "year": 1848,
       "pages": null,
       "isbn": null,
-      "coverUrl": "https://covers.openlibrary.org/b/id/3293338-L.jpg",
+      "coverUrl": "/uploads/covers/les-nuits-blanches.jpg",
       "color": "#5A1F27",
       "genres": [],
       "themes": [],
@@ -719,10 +722,10 @@
         "rating": "drive",
         "originalTitle": "wikidata",
         "categoryIds": "auto",
-        "coverUrl": "openlibrary"
+        "coverUrl": "drive"
       },
       "createdAt": "2026-11-09T00:06:13.238Z",
-      "updatedAt": "2026-11-09T00:25:11.868Z"
+      "updatedAt": "2026-11-10T02:04:44.673Z"
     },
     {
       "id": "e89cf622-8dfa-4ea5-a899-1223b18e20b8",
@@ -737,7 +740,7 @@
       "year": 1943,
       "pages": null,
       "isbn": null,
-      "coverUrl": "https://covers.openlibrary.org/b/id/10708272-L.jpg",
+      "coverUrl": "/uploads/covers/le-petit-prince.jpg",
       "color": "#4B1E2E",
       "genres": [],
       "themes": [],
@@ -764,11 +767,11 @@
         "summary": "drive",
         "year": "drive",
         "rating": "drive",
-        "coverUrl": "openlibrary",
+        "coverUrl": "drive",
         "categoryIds": "auto"
       },
       "createdAt": "2026-11-09T00:06:13.239Z",
-      "updatedAt": "2026-11-09T00:25:11.869Z"
+      "updatedAt": "2026-11-10T02:04:44.675Z"
     },
     {
       "id": "63e1a74a-6d02-4657-831b-4526792f00f9",
@@ -783,7 +786,7 @@
       "year": 1645,
       "pages": null,
       "isbn": null,
-      "coverUrl": null,
+      "coverUrl": "/uploads/covers/le-traite-des-cinq-roues.png",
       "color": "#5A1F27",
       "genres": [],
       "themes": [],
@@ -810,10 +813,11 @@
         "summary": "drive",
         "year": "drive",
         "rating": "drive",
-        "categoryIds": "auto"
+        "categoryIds": "auto",
+        "coverUrl": "drive"
       },
       "createdAt": "2026-11-09T00:06:13.241Z",
-      "updatedAt": "2026-11-09T00:25:11.870Z"
+      "updatedAt": "2026-11-10T02:04:44.677Z"
     },
     {
       "id": "e3322d1f-3c7c-4c4b-8212-36baee6ccdfe",
@@ -828,7 +832,7 @@
       "year": 1877,
       "pages": null,
       "isbn": null,
-      "coverUrl": null,
+      "coverUrl": "/uploads/covers/le-reve-d-un-homme-ridicule.png",
       "color": "#3B2A3F",
       "genres": [],
       "themes": [],
@@ -854,10 +858,11 @@
         "summary": "drive",
         "year": "drive",
         "rating": "drive",
-        "categoryIds": "auto"
+        "categoryIds": "auto",
+        "coverUrl": "drive"
       },
       "createdAt": "2026-11-09T00:06:13.242Z",
-      "updatedAt": "2026-11-09T00:25:11.871Z"
+      "updatedAt": "2026-11-10T02:04:44.678Z"
     },
     {
       "id": "839bfefe-f0e9-489f-a6bb-626a6a123866",
@@ -872,7 +877,7 @@
       "year": 1897,
       "pages": null,
       "isbn": null,
-      "coverUrl": null,
+      "coverUrl": "/uploads/covers/dracula.jpg",
       "color": "#4B1E2E",
       "genres": [
         "Roman gothique",
@@ -904,10 +909,611 @@
         "authorNationality": "scryptorium",
         "originalLanguage": "scryptorium",
         "genres": "scryptorium",
-        "categoryIds": "auto"
+        "categoryIds": "auto",
+        "coverUrl": "https://www.livredepoche.com/livre/dracula-9782253023388/"
       },
       "createdAt": "2026-11-09T23:20:41.133Z",
-      "updatedAt": "2026-11-09T23:20:41.133Z"
+      "updatedAt": "2026-11-10T02:06:21.812Z"
+    },
+    {
+      "id": "a26eb3c8-aec6-4b7f-9de3-ba6806124a76",
+      "slug": "the-witcher-le-dernier-voeu",
+      "title": "The Witcher : Le dernier vœu",
+      "originalTitle": null,
+      "author": "Andrzej Sapkowski",
+      "authorNationality": null,
+      "originalLanguage": null,
+      "edition": null,
+      "publisher": null,
+      "year": 1993,
+      "pages": null,
+      "isbn": null,
+      "coverUrl": "/uploads/covers/the-witcher-le-dernier-voeu.jpg",
+      "color": "#2F3B2E",
+      "genres": [],
+      "themes": [],
+      "categoryIds": [
+        "cat-fantasy-imaginaire",
+        "cat-litterature-contemporaine",
+        "cat-coups-de-coeur"
+      ],
+      "summary": "Publié en 1993 sous sa forme originale polonaise, Le Dernier Vœu est un recueil de nouvelles fantastiques d'Andrzej Sapkowski qui nous plonge dans un univers médiéval sombre, peuplé de monstres, de magie et de conflits humains. À travers les aventures de Geralt de Riv, l'auteur aborde les thèmes de la morale, de la discrimination, de la solitude, de l'amour et du libre arbitre. La frontière entre le bien et le mal occupe une place centrale dans le récit.\n\nL'histoire suit Geralt, un sorceleur dont le métier consiste à traquer et à éliminer les créatures qui menacent les hommes. Pourtant, derrière son apparente froideur, il cache un personnage profondément humain, souvent confronté à des choix moraux complexes. Au fil de ses aventures, il rencontre des personnages qui marqueront son existence, notamment Jaskier et Yennefer de Vengerberg.\n\nCe qui rend ce recueil particulièrement intéressant, c'est la manière dont Sapkowski détourne les contes traditionnels. Les monstres ne sont pas nécessairement ceux que l'on croit, et les hommes peuvent parfois se montrer bien plus cruels que les créatures qu'ils redoutent.\n\nÀ travers cette œuvre, l'auteur nous invite finalement à remettre en question notre conception du bien et du mal. Il nous rappelle que la véritable monstruosité ne se reconnaît pas toujours à l'apparence, mais parfois aux actes et aux intentions.\n\nJ'ai particulièrement aimé cette lecture pour son univers, ses personnages et surtout ses questionnements moraux. Geralt est un personnage que je trouve fascinant, car malgré sa volonté de rester neutre, il se retrouve constamment confronté à des situations qui l'obligent à prendre position.",
+      "spoilerAnalysis": "",
+      "summarySpoilers": false,
+      "editorial": "",
+      "status": "finished",
+      "rating": 10,
+      "readStartedAt": null,
+      "readFinishedAt": null,
+      "visibility": "published",
+      "driveRefs": [
+        "https://docs.google.com/document/d/10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws/edit"
+      ],
+      "sources": {
+        "title": "drive",
+        "author": "drive",
+        "summary": "drive",
+        "year": "drive",
+        "rating": "drive",
+        "status": "drive",
+        "categoryIds": "auto",
+        "coverUrl": "drive"
+      },
+      "createdAt": "2026-11-10T02:00:24.100Z",
+      "updatedAt": "2026-11-10T02:04:44.680Z"
+    },
+    {
+      "id": "45257288-65c9-4045-a952-8aeea5d38c51",
+      "slug": "the-witcher-l-epee-de-la-providence",
+      "title": "The Witcher : L’épée de la providence",
+      "originalTitle": null,
+      "author": "Andrzej Sapkowski",
+      "authorNationality": null,
+      "originalLanguage": null,
+      "edition": null,
+      "publisher": null,
+      "year": 1992,
+      "pages": null,
+      "isbn": null,
+      "coverUrl": "/uploads/covers/the-witcher-l-epee-de-la-providence.png",
+      "color": "#2F3B2E",
+      "genres": [],
+      "themes": [],
+      "categoryIds": [
+        "cat-fantasy-imaginaire",
+        "cat-litterature-contemporaine",
+        "cat-coups-de-coeur"
+      ],
+      "summary": "Publié en 1992, L'Épée de la providence est un recueil de nouvelles qui poursuit les aventures de Geralt de Riv. À travers cette œuvre, Andrzej Sapkowski aborde les thèmes du destin, de l'amour, de la perte, du sacrifice et de la responsabilité. La question de la providence est omniprésente : sommes-nous réellement maîtres de notre existence ou certaines rencontres sont-elles inévitables ?\n\nAu cours de ses aventures, Geralt continue de parcourir un monde marqué par la violence et les tensions entre les différentes races. Ses relations avec Yennefer deviennent de plus en plus complexes, tandis que sa rencontre avec la jeune Ciri va profondément bouleverser son existence.\n\nL'histoire prend progressivement une dimension plus intime. Derrière les combats et les créatures fantastiques se cachent des personnages confrontés à leurs sentiments, à leurs peurs et à leurs contradictions. Geralt, qui tente constamment d'échapper à ses émotions, découvre que certains liens sont impossibles à ignorer.\n\nÀ travers ce recueil, Sapkowski nous interroge sur la place du destin dans nos vies. Il suggère que celui-ci ne suffit pas à construire une relation et que les sentiments, les choix et les responsabilités jouent un rôle tout aussi important.\n\nJ'ai particulièrement aimé cette lecture pour la profondeur émotionnelle qu'elle apporte aux personnages. La relation entre Geralt et Ciri m'a beaucoup marqué, notamment parce qu'elle montre que les liens les plus forts ne sont pas nécessairement ceux du sang.",
+      "spoilerAnalysis": "",
+      "summarySpoilers": false,
+      "editorial": "",
+      "status": "finished",
+      "rating": 10,
+      "readStartedAt": null,
+      "readFinishedAt": null,
+      "visibility": "published",
+      "driveRefs": [
+        "https://docs.google.com/document/d/10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws/edit"
+      ],
+      "sources": {
+        "title": "drive",
+        "author": "drive",
+        "summary": "drive",
+        "year": "drive",
+        "rating": "drive",
+        "status": "drive",
+        "categoryIds": "auto",
+        "coverUrl": "drive"
+      },
+      "createdAt": "2026-11-10T02:00:24.100Z",
+      "updatedAt": "2026-11-10T02:04:44.689Z"
+    },
+    {
+      "id": "a6c24fc4-495b-4662-ad11-c054185f2ac6",
+      "slug": "the-witcher-le-temps-du-mepris",
+      "title": "The Witcher : Le temps du mépris",
+      "originalTitle": null,
+      "author": "Andrzej Sapkowski",
+      "authorNationality": null,
+      "originalLanguage": null,
+      "edition": null,
+      "publisher": null,
+      "year": 1995,
+      "pages": null,
+      "isbn": null,
+      "coverUrl": "/uploads/covers/the-witcher-le-temps-du-mepris.jpg",
+      "color": "#4B1E2E",
+      "genres": [],
+      "themes": [],
+      "categoryIds": [
+        "cat-fantasy-imaginaire",
+        "cat-litterature-contemporaine",
+        "cat-coups-de-coeur"
+      ],
+      "summary": "Publié en 1995, Le Temps du mépris est le deuxième roman de la saga principale du Sorceleur. À travers cette œuvre, Andrzej Sapkowski aborde les thèmes de la trahison, du pouvoir, de la guerre et de la perte de l'innocence. Le champ lexical de la violence et de la méfiance est particulièrement présent dans ce récit, où les alliances deviennent de plus en plus fragiles.\n\nL'histoire prend place dans un contexte politique extrêmement tendu. Les royaumes du Nord se préparent à affronter Nilfgaard l’empire du sud, tandis que les magiciens, censés préserver un certain équilibre, sont eux-mêmes divisés par leurs ambitions. Geralt, Yennefer et Ciri se retrouvent progressivement entraînés dans des événements qui vont bouleverser leur existence.\n\nLe rassemblement des magiciens sur l'île de Thanedd marque un tournant majeur. Les trahisons se multiplient, les conflits éclatent et Ciri se retrouve brutalement confrontée à la cruauté d'un monde qu'elle ne comprend pas encore totalement.\n\nÀ travers ce roman, Sapkowski montre comment la recherche du pouvoir peut conduire les hommes à sacrifier leurs principes et ceux qu'ils prétendent protéger. La guerre apparaît alors comme le résultat de décisions prises par quelques individus, mais dont les conséquences frappent des populations entières.\n\nJ'ai particulièrement aimé cette lecture pour son intensité et ses nombreux retournements de situation. J'ai aussi apprécié la manière dont l'auteur fait évoluer Ciri, qui commence à perdre son innocence face à la violence du monde. Les intrigues politiques rendent l'histoire particulièrement captivante.",
+      "spoilerAnalysis": "",
+      "summarySpoilers": true,
+      "editorial": "",
+      "status": "finished",
+      "rating": 10,
+      "readStartedAt": null,
+      "readFinishedAt": null,
+      "visibility": "published",
+      "driveRefs": [
+        "https://docs.google.com/document/d/10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws/edit"
+      ],
+      "sources": {
+        "title": "drive",
+        "author": "drive",
+        "summary": "drive",
+        "year": "drive",
+        "rating": "drive",
+        "status": "drive",
+        "categoryIds": "auto",
+        "coverUrl": "drive"
+      },
+      "createdAt": "2026-11-10T02:00:24.100Z",
+      "updatedAt": "2026-11-10T02:04:44.691Z"
+    },
+    {
+      "id": "276ac29f-302b-4d90-8095-1cbdc6740b1c",
+      "slug": "the-witcher-le-bapteme-du-feu",
+      "title": "The Witcher : Le baptême du feu",
+      "originalTitle": null,
+      "author": "Andrzej Sapkowski",
+      "authorNationality": null,
+      "originalLanguage": null,
+      "edition": null,
+      "publisher": null,
+      "year": 1996,
+      "pages": null,
+      "isbn": null,
+      "coverUrl": "/uploads/covers/the-witcher-le-bapteme-du-feu.jpg",
+      "color": "#5C3A1E",
+      "genres": [],
+      "themes": [],
+      "categoryIds": [
+        "cat-fantasy-imaginaire",
+        "cat-litterature-contemporaine",
+        "cat-coups-de-coeur"
+      ],
+      "summary": "Publié en 1996, Le Baptême du feu est le troisième roman de la saga principale du Sorceleur. Andrzej Sapkowski y explore les thèmes de l'amitié, de la loyauté, du sacrifice, de la solidarité et de la reconstruction personnelle. Contrairement aux précédents tomes, l'histoire accorde une place particulièrement importante aux relations humaines qui se construisent dans l'adversité.\n\nAprès les événements tragiques de Thanedd, Geralt, blessé et séparé de Ciri, décide de partir à sa recherche. Accompagné de Jaskier, il rencontre progressivement plusieurs personnages, notamment Milva, Cahir et Régis, qui vont former un groupe aussi improbable qu'attachant.\n\nLeur voyage se déroule dans un monde ravagé par la guerre, où les villages sont détruits, les populations déplacées et les innocents abandonnés à leur sort. Au fil de leur périple, les compagnons apprennent à se connaître, à dépasser leurs différences et à s'entraider malgré leurs passés respectifs.\n\nCe qui m'a particulièrement marqué dans ce roman, c'est la manière dont Sapkowski remet en question les préjugés. Des individus que tout semble opposer parviennent à développer des liens sincères. Leurs origines, leurs différences et leurs erreurs passées ne les empêchent pas de partager une cause commune.\n\nÀ travers cette œuvre, l'auteur nous rappelle que la véritable force ne réside pas uniquement dans les capacités physiques ou dans le pouvoir, mais également dans notre capacité à faire confiance aux autres et à leur venir en aide.\n\nJ'ai particulièrement aimé cette lecture pour les relations entre les personnages. Le groupe qui se forme autour de Geralt est, selon moi, l'un des plus beaux aspects de la saga. J'ai apprécié leur humour, leurs désaccords, leur loyauté et surtout cette idée que l'on peut trouver une famille auprès de personnes que rien ne nous destinait à rencontrer.",
+      "spoilerAnalysis": "",
+      "summarySpoilers": true,
+      "editorial": "",
+      "status": "finished",
+      "rating": 10,
+      "readStartedAt": null,
+      "readFinishedAt": null,
+      "visibility": "published",
+      "driveRefs": [
+        "https://docs.google.com/document/d/10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws/edit"
+      ],
+      "sources": {
+        "title": "drive",
+        "author": "drive",
+        "summary": "drive",
+        "year": "drive",
+        "rating": "drive",
+        "status": "drive",
+        "categoryIds": "auto",
+        "coverUrl": "drive"
+      },
+      "createdAt": "2026-11-10T02:00:24.100Z",
+      "updatedAt": "2026-11-10T02:04:44.692Z"
+    },
+    {
+      "id": "25ddfd43-c461-409b-bfb4-58a9b7e8f331",
+      "slug": "the-witcher-la-tour-de-l-hirondelle",
+      "title": "The Witcher : La tour de l’hirondelle",
+      "originalTitle": null,
+      "author": "Andrzej Sapkowski",
+      "authorNationality": null,
+      "originalLanguage": null,
+      "edition": null,
+      "publisher": null,
+      "year": 1997,
+      "pages": null,
+      "isbn": null,
+      "coverUrl": "/uploads/covers/the-witcher-la-tour-de-l-hirondelle.jpg",
+      "color": "#4A3420",
+      "genres": [],
+      "themes": [],
+      "categoryIds": [
+        "cat-fantasy-imaginaire",
+        "cat-litterature-contemporaine",
+        "cat-coups-de-coeur"
+      ],
+      "summary": "Publié en 1997, La Tour de l'hirondelle est le quatrième roman de la saga principale du Sorceleur. Andrzej Sapkowski y aborde les thèmes de la souffrance, de la vengeance, de la solitude, de la liberté et de la survie. L'atmosphère de ce roman est particulièrement sombre, notamment à travers le parcours de Ciri, confrontée à une violence qui semble ne jamais prendre fin.\n\nL'histoire suit principalement Ciri, désormais traquée par de nombreux ennemis qui cherchent à s'emparer d'elle pour exploiter son héritage et ses pouvoirs. Après avoir traversé de nombreuses épreuves, elle trouve refuge auprès de Vysogota, un vieil homme qui recueille son témoignage et découvre progressivement les événements qui l'ont conduite jusqu'à lui.\n\nÀ travers ses souvenirs, le lecteur découvre une jeune fille profondément marquée par la souffrance, mais qui refuse malgré tout de renoncer à sa liberté. En parallèle, Geralt poursuit sa quête pour la retrouver, accompagné de ses fidèles compagnons.\n\nCe roman m'a particulièrement intéressé par sa construction narrative. Sapkowski alterne les époques, les témoignages et les points de vue, ce qui permet de découvrir progressivement la vérité sur les événements.\n\nL'auteur nous interroge également sur les conséquences de la vengeance. Lorsqu'un individu est confronté à la cruauté, peut-il encore échapper à la haine ? La souffrance justifie-t-elle de reproduire la violence que l'on a soi-même subie ?\n\nÀ travers cette œuvre, Sapkowski nous rappelle que la liberté possède un prix et que les blessures du passé peuvent profondément transformer une personne sans pour autant définir entièrement son avenir.\n\nJ'ai particulièrement aimé cette lecture pour son intensité émotionnelle et pour l'évolution de Ciri. Son parcours est parfois difficile à lire tant les épreuves qu'elle traverse sont cruelles. J'ai également apprécié la profondeur psychologique du récit et sa manière de montrer que la frontière entre justice et vengeance peut devenir extrêmement fragile.",
+      "spoilerAnalysis": "",
+      "summarySpoilers": true,
+      "editorial": "",
+      "status": "finished",
+      "rating": 10,
+      "readStartedAt": null,
+      "readFinishedAt": null,
+      "visibility": "published",
+      "driveRefs": [
+        "https://docs.google.com/document/d/10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws/edit"
+      ],
+      "sources": {
+        "title": "drive",
+        "author": "drive",
+        "summary": "drive",
+        "year": "drive",
+        "rating": "drive",
+        "status": "drive",
+        "categoryIds": "auto",
+        "coverUrl": "drive"
+      },
+      "createdAt": "2026-11-10T02:00:24.100Z",
+      "updatedAt": "2026-11-10T02:04:44.695Z"
+    },
+    {
+      "id": "aaaf53c4-fb60-4106-98f0-3d938d7a64e6",
+      "slug": "the-witcher-la-dame-de-lac",
+      "title": "The Witcher : La dame du lac",
+      "originalTitle": null,
+      "author": "Andrzej Sapkowski",
+      "authorNationality": null,
+      "originalLanguage": null,
+      "edition": null,
+      "publisher": null,
+      "year": 1999,
+      "pages": null,
+      "isbn": null,
+      "coverUrl": "/uploads/covers/the-witcher-la-dame-de-lac.png",
+      "color": "#2F3B2E",
+      "genres": [],
+      "themes": [],
+      "categoryIds": [
+        "cat-fantasy-imaginaire",
+        "cat-litterature-contemporaine",
+        "cat-coups-de-coeur"
+      ],
+      "summary": "Publié en 1999, La Dame du lac est le cinquième et dernier roman de la saga principale du Sorceleur. Andrzej Sapkowski y conclut une histoire profondément marquée par les thèmes du destin, de l'amour, de la guerre, du sacrifice et de la condition humaine. Ce dernier tome prend également une dimension philosophique en interrogeant la manière dont les histoires deviennent des légendes et dont les événements sont transmis à travers le temps.\n\nL'histoire poursuit les aventures de Ciri, qui se retrouve confrontée aux conséquences de son héritage et aux ambitions de ceux qui cherchent à contrôler son destin. Pendant ce temps, Geralt et ses compagnons continuent leur quête pour la retrouver, tandis que la guerre entre Nilfgaard et les royaumes du Nord atteint son apogée.\n\nLes différentes intrigues développées au fil des romans finissent progressivement par se rejoindre. Les personnages doivent faire face à leurs choix, à leurs erreurs et aux conséquences de leurs actes.\n\nAu-delà de la conclusion des aventures de Geralt et Ciri, ce roman nous interroge sur la notion de héros. Un héros est-il celui qui accomplit de grandes choses ou simplement celui qui refuse d'abandonner les personnes qu'il aime ?\n\nSapkowski nous montre également que les guerres, les ambitions politiques et les prophéties peuvent sembler déterminer le cours de l'histoire, mais que les relations humaines restent au cœur de notre existence.\n\nJ'ai particulièrement aimé cette lecture pour sa dimension émotionnelle et pour la conclusion apportée aux différents personnages. Après avoir suivi leurs aventures pendant plusieurs romans, je me suis réellement attaché à eux. Ce dernier tome m'a fait réfléchir à la manière dont le destin, les choix et les sacrifices peuvent façonner une vie. C'est une conclusion qui m'a profondément marqué.",
+      "spoilerAnalysis": "",
+      "summarySpoilers": true,
+      "editorial": "",
+      "status": "finished",
+      "rating": 10,
+      "readStartedAt": null,
+      "readFinishedAt": null,
+      "visibility": "published",
+      "driveRefs": [
+        "https://docs.google.com/document/d/10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws/edit"
+      ],
+      "sources": {
+        "title": "drive",
+        "author": "drive",
+        "summary": "drive",
+        "year": "drive",
+        "rating": "drive",
+        "status": "drive",
+        "categoryIds": "auto",
+        "coverUrl": "drive"
+      },
+      "createdAt": "2026-11-10T02:00:24.100Z",
+      "updatedAt": "2026-11-10T02:04:44.703Z"
+    },
+    {
+      "id": "c5bc7898-dbe9-4034-8abe-0c84fb08cdcf",
+      "slug": "the-witcher-la-saison-des-orages",
+      "title": "The Witcher : La saison des orages",
+      "originalTitle": null,
+      "author": "Andrzej Sapkowski",
+      "authorNationality": null,
+      "originalLanguage": null,
+      "edition": null,
+      "publisher": null,
+      "year": 2013,
+      "pages": null,
+      "isbn": null,
+      "coverUrl": "/uploads/covers/the-witcher-la-saison-des-orages.png",
+      "color": "#4A3420",
+      "genres": [],
+      "themes": [],
+      "categoryIds": [
+        "cat-fantasy-imaginaire",
+        "cat-litterature-contemporaine",
+        "cat-coups-de-coeur"
+      ],
+      "summary": "Publié en 2013, La Saison des orages est un roman indépendant qui se déroule avant les événements de la saga principale du Sorceleur. Andrzej Sapkowski y retrouve Geralt de Riv dans une aventure mêlant magie, intrigues politiques et conflits humains. Les thèmes de la corruption, de la justice, de la manipulation et de la morale occupent une place importante dans ce récit.\n\nL'histoire débute lorsque Geralt arrive dans le royaume de Kerack, où il se retrouve rapidement mêlé à une affaire qui le dépasse. Accusé d'un crime et emprisonné, il découvre à sa libération que ses précieuses épées lui ont été dérobées. Il entreprend alors de les retrouver, mais cette quête va progressivement l'entraîner dans un enchevêtrement de complots, d'expériences magiques et d'ambitions politiques.\n\nAu cours de son aventure, Geralt rencontre plusieurs personnages dont les intentions sont parfois difficiles à discerner. Une fois encore, il découvre que les véritables dangers ne viennent pas nécessairement des monstres, mais des hommes et de leur soif de pouvoir.\n\nÀ travers ce roman, Sapkowski dénonce notamment les abus de ceux qui détiennent l'autorité. Il montre comment la science, la magie et les institutions peuvent devenir dangereuses lorsqu'elles ne sont plus guidées par des principes moraux.\n\nCe qui rend cette histoire intéressante, c'est également le contraste entre la puissance de Geralt et son impuissance face aux manipulations politiques. Malgré ses capacités exceptionnelles, il reste un individu confronté à un monde dont il ne maîtrise pas toutes les règles.\n\nJ'ai particulièrement aimé cette lecture parce qu'elle m'a permis de retrouver Geralt dans une aventure plus indépendante, proche des premières nouvelles. J'ai apprécié son humour, son caractère et surtout sa manière de rester fidèle à ses principes malgré les situations auxquelles il est confronté. C'est aussi un roman qui m'a rappelé pourquoi j'aimais autant cet univers.",
+      "spoilerAnalysis": "",
+      "summarySpoilers": false,
+      "editorial": "",
+      "status": "finished",
+      "rating": 10,
+      "readStartedAt": null,
+      "readFinishedAt": null,
+      "visibility": "published",
+      "driveRefs": [
+        "https://docs.google.com/document/d/10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws/edit"
+      ],
+      "sources": {
+        "title": "drive",
+        "author": "drive",
+        "summary": "drive",
+        "year": "drive",
+        "rating": "drive",
+        "status": "drive",
+        "categoryIds": "auto",
+        "coverUrl": "drive"
+      },
+      "createdAt": "2026-11-10T02:00:24.100Z",
+      "updatedAt": "2026-11-10T02:04:44.705Z"
+    },
+    {
+      "id": "59892bbc-6d09-4dee-b7f5-3a8070917bda",
+      "slug": "the-witcher-la-croisee-des-corbeaux",
+      "title": "The Witcher : La croisée des corbeaux",
+      "originalTitle": null,
+      "author": "Andrzej Sapkowski",
+      "authorNationality": null,
+      "originalLanguage": null,
+      "edition": null,
+      "publisher": null,
+      "year": 2024,
+      "pages": null,
+      "isbn": null,
+      "coverUrl": "/uploads/covers/the-witcher-la-croisee-des-corbeaux.jpg",
+      "color": "#1F3A3A",
+      "genres": [],
+      "themes": [],
+      "categoryIds": [
+        "cat-fantasy-imaginaire",
+        "cat-litterature-contemporaine",
+        "cat-coups-de-coeur"
+      ],
+      "summary": "Publié en Pologne en 2024 et traduit en français en 2025, La Croisée des corbeaux est un roman qui nous plonge dans la jeunesse de Geralt de Riv, bien avant les événements de la saga principale. Andrzej Sapkowski y aborde les thèmes de l'apprentissage, de la justice, de la transmission, de l'identité et de la construction personnelle. À travers ce récit, l'auteur s'intéresse particulièrement à la manière dont les expériences et les rencontres façonnent un individu et le construisent.\n\nL'histoire prend place alors que Geralt vient de quitter Kaer Morhen, après avoir terminé sa formation de sorceleur. Encore jeune et inexpérimenté, il découvre rapidement que le monde extérieur est bien plus complexe que ce qu'il avait imaginé et appris. Après s'être retrouvé dans une situation périlleuse, il croise la route de Preston Holt, un sorceleur expérimenté qui va jouer un rôle important dans son apprentissage et dans son métier.\n\nAu fil de ses aventures, Geralt se retrouve confronté à des situations dans lesquelles les enseignements reçus à Kaer Morhen ne suffisent pas toujours. Il doit apprendre à distinguer ce qui est juste de ce qui ne l'est pas et comprendre que les hommes peuvent parfois se révéler plus dangereux que les monstres.\n\nCe qui m'a particulièrement intéressé dans ce roman, c'est la découverte d'un Geralt différent de celui que nous connaissons. Il n'est pas encore ce sorceleur expérimenté, cynique et parfois désabusé. Il commet des erreurs, découvre les injustices du monde et commence progressivement à construire sa propre vision de l'existence.\n\nÀ travers cette œuvre, Sapkowski nous rappelle que personne ne naît avec une compréhension parfaite du monde. Ce sont nos expériences, nos erreurs et les personnes que nous rencontrons qui contribuent à faire de nous ce que nous sommes.\n\nJ'ai particulièrement aimé cette lecture parce qu'elle permet de découvrir les origines du personnage de Geralt et de mieux comprendre son évolution. Après avoir lu l'ensemble de la saga, retrouver un Geralt plus jeune apporte une perspective différente sur sa personnalité et ses convictions. J'ai également apprécié les réflexions autour de l'apprentissage, de la morale, de la philosophie et de la transmission.",
+      "spoilerAnalysis": "",
+      "summarySpoilers": false,
+      "editorial": "",
+      "status": "finished",
+      "rating": 10,
+      "readStartedAt": null,
+      "readFinishedAt": null,
+      "visibility": "published",
+      "driveRefs": [
+        "https://docs.google.com/document/d/10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws/edit"
+      ],
+      "sources": {
+        "title": "drive",
+        "author": "drive",
+        "summary": "drive",
+        "year": "drive",
+        "rating": "drive",
+        "status": "drive",
+        "categoryIds": "auto",
+        "coverUrl": "drive"
+      },
+      "createdAt": "2026-11-10T02:00:24.100Z",
+      "updatedAt": "2026-11-10T02:04:44.707Z"
+    },
+    {
+      "id": "cb9588fc-fd0e-490c-bfad-92a213579a04",
+      "slug": "les-miserables",
+      "title": "Les misérables",
+      "originalTitle": null,
+      "author": "Victor Hugo",
+      "authorNationality": null,
+      "originalLanguage": null,
+      "edition": null,
+      "publisher": null,
+      "year": null,
+      "pages": null,
+      "isbn": null,
+      "coverUrl": "/uploads/covers/les-miserables.jpg",
+      "color": "#5A1F27",
+      "genres": [],
+      "themes": [],
+      "categoryIds": [
+        "cat-litterature-classique"
+      ],
+      "summary": "Prochainement.",
+      "spoilerAnalysis": "",
+      "summarySpoilers": false,
+      "editorial": "",
+      "status": "to_read",
+      "rating": null,
+      "readStartedAt": null,
+      "readFinishedAt": null,
+      "visibility": "published",
+      "driveRefs": [
+        "https://docs.google.com/document/d/10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws/edit"
+      ],
+      "sources": {
+        "title": "drive",
+        "author": "drive",
+        "summary": "manual",
+        "status": "manual",
+        "categoryIds": "auto",
+        "coverUrl": "openlibrary",
+        "coverSourceUrl": "https://covers.openlibrary.org/b/id/971607-L.jpg"
+      },
+      "createdAt": "2026-11-10T13:05:19.302Z",
+      "updatedAt": "2026-11-10T13:16:01.330Z"
+    },
+    {
+      "id": "d22e229b-75c9-42bf-b2e6-8b6b3d49a73b",
+      "slug": "le-comte-de-montecristo-tome-1",
+      "title": "Le comte de Montecristo : Tome 1",
+      "originalTitle": null,
+      "author": "Alexandre Dumas",
+      "authorNationality": null,
+      "originalLanguage": null,
+      "edition": null,
+      "publisher": null,
+      "year": null,
+      "pages": null,
+      "isbn": null,
+      "coverUrl": "/uploads/covers/le-comte-de-montecristo-tome-1.jpg",
+      "color": "#5A1F27",
+      "genres": [],
+      "themes": [],
+      "categoryIds": [
+        "cat-litterature-classique"
+      ],
+      "summary": "Prochainement.",
+      "spoilerAnalysis": "",
+      "summarySpoilers": false,
+      "editorial": "",
+      "status": "to_read",
+      "rating": null,
+      "readStartedAt": null,
+      "readFinishedAt": null,
+      "visibility": "published",
+      "driveRefs": [
+        "https://docs.google.com/document/d/10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws/edit"
+      ],
+      "sources": {
+        "title": "drive",
+        "author": "drive",
+        "summary": "manual",
+        "status": "manual",
+        "categoryIds": "auto",
+        "coverUrl": "openlibrary",
+        "coverSourceUrl": "https://covers.openlibrary.org/b/id/14566393-L.jpg"
+      },
+      "createdAt": "2026-11-10T13:05:19.302Z",
+      "updatedAt": "2026-11-10T13:16:01.346Z"
+    },
+    {
+      "id": "d8d8bd30-ed75-4e19-9b13-a3d7e48e8f69",
+      "slug": "les-freres-karamazov-vol-1",
+      "title": "Les frères Karamazov : vol.1",
+      "originalTitle": null,
+      "author": "Fiodor Dostoïevski",
+      "authorNationality": null,
+      "originalLanguage": null,
+      "edition": null,
+      "publisher": null,
+      "year": null,
+      "pages": null,
+      "isbn": null,
+      "coverUrl": "/uploads/covers/les-freres-karamazov-vol-1.jpg",
+      "color": "#5A1F27",
+      "genres": [],
+      "themes": [],
+      "categoryIds": [
+        "cat-litterature-classique",
+        "cat-philosophie"
+      ],
+      "summary": "Prochainement.",
+      "spoilerAnalysis": "",
+      "summarySpoilers": false,
+      "editorial": "",
+      "status": "to_read",
+      "rating": null,
+      "readStartedAt": null,
+      "readFinishedAt": null,
+      "visibility": "published",
+      "driveRefs": [
+        "https://docs.google.com/document/d/10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws/edit"
+      ],
+      "sources": {
+        "title": "drive",
+        "author": "drive",
+        "summary": "manual",
+        "status": "manual",
+        "categoryIds": "auto",
+        "coverUrl": "openlibrary",
+        "coverSourceUrl": "https://covers.openlibrary.org/b/id/5755766-L.jpg"
+      },
+      "createdAt": "2026-11-10T13:05:19.302Z",
+      "updatedAt": "2026-11-10T13:16:01.347Z"
+    },
+    {
+      "id": "aae85883-52ef-47b0-88e1-c78d68867b70",
+      "slug": "l-etranger",
+      "title": "L’étranger",
+      "originalTitle": null,
+      "author": "Albert Camus",
+      "authorNationality": null,
+      "originalLanguage": null,
+      "edition": null,
+      "publisher": null,
+      "year": null,
+      "pages": null,
+      "isbn": null,
+      "coverUrl": "/uploads/covers/l-etranger.jpg",
+      "color": "#5A1F27",
+      "genres": [],
+      "themes": [],
+      "categoryIds": [
+        "cat-litterature-classique",
+        "cat-philosophie"
+      ],
+      "summary": "Prochainement.",
+      "spoilerAnalysis": "",
+      "summarySpoilers": false,
+      "editorial": "",
+      "status": "to_read",
+      "rating": null,
+      "readStartedAt": null,
+      "readFinishedAt": null,
+      "visibility": "published",
+      "driveRefs": [
+        "https://docs.google.com/document/d/10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws/edit"
+      ],
+      "sources": {
+        "title": "drive",
+        "author": "drive",
+        "summary": "manual",
+        "status": "manual",
+        "categoryIds": "auto",
+        "coverUrl": "openlibrary",
+        "coverSourceUrl": "https://covers.openlibrary.org/b/id/13151269-L.jpg"
+      },
+      "createdAt": "2026-11-10T13:05:19.302Z",
+      "updatedAt": "2026-11-10T13:16:01.348Z"
+    },
+    {
+      "id": "e4788dde-75ab-4845-bf26-027fe5072631",
+      "slug": "le-nom-de-la-rose",
+      "title": "Le nom de la rose",
+      "originalTitle": null,
+      "author": "Umberto Eco",
+      "authorNationality": null,
+      "originalLanguage": null,
+      "edition": null,
+      "publisher": null,
+      "year": null,
+      "pages": null,
+      "isbn": null,
+      "coverUrl": "/uploads/covers/le-nom-de-la-rose.jpg",
+      "color": "#5A1F27",
+      "genres": [],
+      "themes": [],
+      "categoryIds": [
+        "cat-romans-policiers",
+        "cat-histoire-civilisation",
+        "cat-litterature-contemporaine"
+      ],
+      "summary": "Prochainement.",
+      "spoilerAnalysis": "",
+      "summarySpoilers": false,
+      "editorial": "",
+      "status": "to_read",
+      "rating": null,
+      "readStartedAt": null,
+      "readFinishedAt": null,
+      "visibility": "published",
+      "driveRefs": [
+        "https://docs.google.com/document/d/10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws/edit"
+      ],
+      "sources": {
+        "title": "drive",
+        "author": "drive",
+        "summary": "manual",
+        "status": "manual",
+        "categoryIds": "auto",
+        "coverUrl": "openlibrary",
+        "coverSourceUrl": "https://covers.openlibrary.org/b/id/14304463-L.jpg"
+      },
+      "createdAt": "2026-11-10T13:05:19.302Z",
+      "updatedAt": "2026-11-10T13:16:01.351Z"
     }
   ],
   "categories": [
@@ -1012,12 +1618,12 @@
       "driveUrl": "https://docs.google.com/document/d/10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws/edit",
       "driveFileId": "10rmM1xKUMSYtlTLr9iLYf_yucpWfmb92OB_hVR8Uaws",
       "text": "",
-      "contentHash": "14df730551f7d337900123a7383ca41571642036548b4cd7c8af9c903d077ad3",
+      "contentHash": "3a59e587fe9368d3051dd75b4b22556cf1b53ddb02b2134ef7cf647f877453c2",
       "status": "processed",
       "error": null,
       "aiDraft": null,
       "createdAt": "2026-11-09T00:05:36.155Z",
-      "updatedAt": "2026-11-09T00:25:11.872Z"
+      "updatedAt": "2026-11-10T13:05:19.302Z"
     }
   ],
   "settings": {
