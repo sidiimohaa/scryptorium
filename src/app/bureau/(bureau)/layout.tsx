@@ -13,6 +13,7 @@ const NAV = [
   { href: "/bureau/rayonnages", label: "Rayonnages" },
   { href: "/bureau/imports", label: "Imports & Drive" },
   { href: "/bureau/refectoire", label: "Réfectoire" },
+  { href: "/bureau/capitulaire", label: "Club (capitulaire)" },
   { href: "/bureau/reglages", label: "Réglages" },
 ];
 

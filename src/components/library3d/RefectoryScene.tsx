@@ -80,7 +80,8 @@ function makeMaterials() {
     stone: new THREE.MeshStandardMaterial({ color: "#c4b394", roughness: 0.85 }),
   };
 }
-const mats = () => (shared ??= makeMaterials());
+/** Matières d'apparat partagées (aussi utilisées par la salle capitulaire). */
+export const mats = () => (shared ??= makeMaterials());
 
 export default function RefectoryScene(props: Props) {
   const { lowPower } = props;
@@ -136,7 +137,7 @@ function Refectory({ places, selected, lectorView, onSelect, onLector, lector, l
 }
 
 /** Reflets : un environnement de salle neutre (local, sans téléchargement) pour l'or, le cristal et le marbre. */
-function Reflections() {
+export function Reflections() {
   const { gl, scene } = useThree();
   useEffect(() => {
     const pmrem = new THREE.PMREMGenerator(gl);

@@ -10,7 +10,7 @@ export const NAV = [
   { href: "/catalogue", label: "Catalogue" },
   { href: "/coups-de-coeur", label: "Coups de cœur" },
   { href: "/cabinet", label: "Cabinet des lectures" },
-  { href: "/club", label: "Le Club" },
+  { href: "/capitulaire", label: "Le Club" },
 ];
 
 export function SiteHeader() {

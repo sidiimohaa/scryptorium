@@ -369,3 +369,105 @@ grant select on refectory_topics, refectory_posts to anon;
 grant select, insert, update, delete on refectory_topics, refectory_posts, refectory_reports to authenticated;
 grant all on refectory_topics, refectory_posts, refectory_reports to service_role;
 grant execute on function is_active_member() to anon, authenticated, service_role;
+
+-- ─── Salle capitulaire : le club de lecture ────────────────────────────────
+-- Un scrutin par mois : le bibliothécaire propose des livres absents de la bibliothèque,
+-- les membres votent (une voix, modifiable tant que le vote est ouvert), le gagnant devient
+-- la lecture du mois, avec ses séances et ses inscrits. Les décomptes publics passent par
+-- des vues : on voit les chiffres, jamais qui a voté quoi.
+create table if not exists club_rounds (
+  id             uuid primary key default gen_random_uuid(),
+  label          text not null check (char_length(label) between 3 and 80),
+  status         text not null default 'voting' check (status in ('voting','reading','archived')),
+  winner_id      uuid,
+  voting_ends_at timestamptz,
+  created_at     timestamptz not null default now(),
+  closed_at      timestamptz
+);
+create table if not exists club_candidates (
+  id         uuid primary key default gen_random_uuid(),
+  round_id   uuid not null references club_rounds(id) on delete cascade,
+  title      text not null check (char_length(title) between 1 and 300),
+  author     text not null default '' check (char_length(author) <= 200),
+  year       int,
+  cover_url  text,
+  blurb      text not null default '' check (char_length(blurb) <= 1000),
+  created_at timestamptz not null default now()
+);
+alter table club_rounds drop constraint if exists club_rounds_winner_fk;
+alter table club_rounds add constraint club_rounds_winner_fk foreign key (winner_id) references club_candidates(id) on delete set null;
+create table if not exists club_votes (
+  round_id     uuid not null references club_rounds(id) on delete cascade,
+  member_id    uuid not null references profiles(id) on delete cascade,
+  candidate_id uuid not null references club_candidates(id) on delete cascade,
+  created_at   timestamptz not null default now(),
+  primary key (round_id, member_id)
+);
+create table if not exists club_sessions (
+  id        uuid primary key default gen_random_uuid(),
+  round_id  uuid not null references club_rounds(id) on delete cascade,
+  starts_at timestamptz not null,
+  title     text not null check (char_length(title) between 2 and 160),
+  note      text not null default '' check (char_length(note) <= 500)
+);
+create table if not exists club_enrollments (
+  round_id   uuid not null references club_rounds(id) on delete cascade,
+  member_id  uuid not null references profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (round_id, member_id)
+);
+-- Un seul scrutin actif (non archivé) à la fois.
+create unique index if not exists club_one_active_round on club_rounds ((true)) where status <> 'archived';
+
+alter table club_rounds      enable row level security;
+alter table club_candidates  enable row level security;
+alter table club_votes       enable row level security;
+alter table club_sessions    enable row level security;
+alter table club_enrollments enable row level security;
+
+drop policy if exists "read rounds" on club_rounds;
+create policy "read rounds" on club_rounds for select using (true);
+drop policy if exists "read candidates" on club_candidates;
+create policy "read candidates" on club_candidates for select using (true);
+drop policy if exists "read sessions" on club_sessions;
+create policy "read sessions" on club_sessions for select using (true);
+
+drop policy if exists "own vote read" on club_votes;
+create policy "own vote read" on club_votes for select using (member_id = auth.uid());
+drop policy if exists "members vote" on club_votes;
+create policy "members vote" on club_votes for insert with check (
+  member_id = auth.uid() and is_active_member()
+  and exists (select 1 from club_rounds r where r.id = round_id and r.status = 'voting')
+  and exists (select 1 from club_candidates c where c.id = candidate_id and c.round_id = club_votes.round_id)
+);
+drop policy if exists "members change vote" on club_votes;
+create policy "members change vote" on club_votes for update using (member_id = auth.uid()) with check (
+  member_id = auth.uid() and is_active_member()
+  and exists (select 1 from club_rounds r where r.id = round_id and r.status = 'voting')
+  and exists (select 1 from club_candidates c where c.id = candidate_id and c.round_id = club_votes.round_id)
+);
+drop policy if exists "members withdraw vote" on club_votes;
+create policy "members withdraw vote" on club_votes for delete using (
+  member_id = auth.uid() and exists (select 1 from club_rounds r where r.id = round_id and r.status = 'voting')
+);
+
+drop policy if exists "own enrollment read" on club_enrollments;
+create policy "own enrollment read" on club_enrollments for select using (member_id = auth.uid());
+drop policy if exists "members enroll" on club_enrollments;
+create policy "members enroll" on club_enrollments for insert with check (
+  member_id = auth.uid() and is_active_member()
+  and exists (select 1 from club_rounds r where r.id = round_id and r.status in ('voting','reading'))
+);
+drop policy if exists "members unenroll" on club_enrollments;
+create policy "members unenroll" on club_enrollments for delete using (member_id = auth.uid());
+
+-- Décomptes publics (vues du propriétaire : agrégats seulement, aucun nom).
+create or replace view club_vote_counts as
+  select round_id, candidate_id, count(*)::int as votes from club_votes group by round_id, candidate_id;
+create or replace view club_enrollment_counts as
+  select round_id, count(*)::int as members from club_enrollments group by round_id;
+
+grant select on club_rounds, club_candidates, club_sessions to anon, authenticated;
+grant select, insert, update, delete on club_votes, club_enrollments to authenticated;
+grant all on club_rounds, club_candidates, club_votes, club_sessions, club_enrollments to service_role;
+grant select on club_vote_counts, club_enrollment_counts to anon, authenticated, service_role;
