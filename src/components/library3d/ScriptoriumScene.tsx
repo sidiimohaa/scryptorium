@@ -102,6 +102,17 @@ function Scriptorium({ book, copyist, onCopyistDone, lowPower, onReady }: Props)
           <CushionStool />
         </group>
         <SideTable />
+        {/* rouleaux sur la tablette basse de la table d'appoint, et tas au pied, près du copiste */}
+        <group position={[1.05, 0.175, 0.35]}>
+          <ScrollHeap seed={101} count={9} spread={0.3} />
+        </group>
+        <group position={[0.75, 0, -0.55]}>
+          <ScrollHeap seed={137} count={16} spread={0.45} />
+        </group>
+        {/* rouleaux liés au coin du pupitre du copiste */}
+        <Scroll position={[-0.2, TOP + 0.026, 0.3]} rotation={[0, 0.25, Math.PI / 2]} radius={0.026} length={0.26} tone={0} tied />
+        <Scroll position={[-0.17, TOP + 0.022, 0.37]} rotation={[0, -0.1, Math.PI / 2]} radius={0.022} length={0.22} tone={3} />
+        <Scroll position={[-0.19, TOP + 0.068, 0.335]} rotation={[0, 0.1, Math.PI / 2]} radius={0.02} length={0.24} tone={4} tied />
         <group position={[0.82, TOP, 0.42]} rotation={[0, 0.44, 0]} scale={0.9}>
           <BookStand book={book} />
         </group>
@@ -113,8 +124,8 @@ function Scriptorium({ book, copyist, onCopyistDone, lowPower, onReady }: Props)
         <Copyist note={copyist} top={TOP} onDone={onCopyistDone} />
       </group>
       {/* enfilade de pupitres vides derrière le copiste */}
-      <Desk position={[-1.7, 0, 4.3]} seed={1} lit />
-      <Desk position={[1.7, 0, 4.3]} seed={2} />
+      <Desk position={[-1.7, 0, 4.3]} seed={1} lit scrolls />
+      <Desk position={[1.7, 0, 4.3]} seed={2} scrolls />
       <Desk position={[-1.7, 0, 6.8]} seed={3} />
       <Desk position={[1.7, 0, 6.8]} seed={4} lit />
       <group scale={1.3}>
@@ -646,7 +657,7 @@ function CopyistTools() {
  * Pupitre de copiste sur pied tourné (comme dans les enluminures) : plan incliné à rebord, livre ouvert ;
  * un siège à coussin. Parfois une chandelle sur une potence fixée au pied.
  */
-function Desk({ position, seed, lit = false }: { position: [number, number, number]; seed: number; lit?: boolean }) {
+function Desk({ position, seed, lit = false, scrolls = false }: { position: [number, number, number]; seed: number; lit?: boolean; scrolls?: boolean }) {
   const wood = useMemo(() => woodTexture("#3e2818", 40 + seed, true), [seed]);
   const mat = <meshStandardMaterial map={wood} color="#6e4c32" roughness={0.65} />;
   const tilt = 0.4;
@@ -703,6 +714,111 @@ function Desk({ position, seed, lit = false }: { position: [number, number, numb
       <group position={[0, 0, 0.5]}>
         <CushionStool w={0.46} d={0.38} />
       </group>
+      {scrolls && (
+        <>
+          {/* deux rouleaux calés contre le rebord du plan incliné */}
+          <group position={[0, topY, 0]} rotation={[tilt, 0, 0]}>
+            <Scroll position={[0.08, 0.05, 0.17]} rotation={[0, 0, Math.PI / 2]} radius={0.03} length={0.42} tone={1} tied />
+            <Scroll position={[-0.12, 0.05, 0.12]} rotation={[0, 0.06, Math.PI / 2]} radius={0.024} length={0.34} tone={2} />
+          </group>
+          {/* tas de rouleaux et de feuillets au pied du pupitre */}
+          <group position={[-Math.sign(position[0]) * 0.6, 0, -0.15]} rotation={[0, seed * 1.3, 0]}>
+            <ScrollHeap seed={seed * 17} count={14} spread={0.42} />
+          </group>
+        </>
+      )}
+    </group>
+  );
+}
+
+const SCROLL_TONES = ["#e6d5b0", "#d9c49a", "#cdb588", "#efe2c4", "#c4a878"];
+
+/** Rouleau de parchemin : cylindre au bord plus sombre, parfois lié d'un cordon, parfois à demi déroulé. */
+function Scroll({ position, rotation, radius, length, tone, tied = false, unrolled = 0 }: {
+  position: [number, number, number];
+  rotation: [number, number, number];
+  radius: number;
+  length: number;
+  tone: number;
+  tied?: boolean;
+  unrolled?: number;
+}) {
+  const color = SCROLL_TONES[tone % SCROLL_TONES.length];
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh>
+        <cylinderGeometry args={[radius, radius, length, 14]} />
+        <meshStandardMaterial color={color} roughness={0.85} />
+      </mesh>
+      {/* tranches enroulées, un peu plus sombres */}
+      {[-1, 1].map((s) => (
+        <mesh key={s} position={[0, (s * length) / 2 + s * 0.001, 0]} rotation={[s > 0 ? -Math.PI / 2 : Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[radius * 0.25, radius, 16]} />
+          <meshStandardMaterial color="#a88d62" roughness={0.9} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+      {tied && (
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[radius + 0.002, 0.003, 5, 18]} />
+          <meshStandardMaterial color="#6e1520" roughness={0.7} />
+        </mesh>
+      )}
+      {unrolled > 0 && (
+        /* feuille à demi déroulée, posée à plat et qui se recourbe */
+        <mesh position={[radius * 0.2, 0, -radius - unrolled / 2]} rotation={[0, 0, Math.PI / 2]}>
+          <planeGeometry args={[length * 0.96, unrolled]} />
+          <meshStandardMaterial color={color} roughness={0.85} side={THREE.DoubleSide} />
+        </mesh>
+      )}
+    </group>
+  );
+}
+
+/**
+ * Tas de rouleaux de parchemin et de feuillets en désordre, posé à plat (origine au sol ou sur une tablette) :
+ * une couche de rouleaux couchés, quelques-uns par-dessus, des feuillets épars et un rouleau à demi déroulé.
+ */
+function ScrollHeap({ seed, count, spread }: { seed: number; count: number; spread: number }) {
+  const items = useMemo(() => {
+    const r = rng(seed);
+    const scrolls: { p: [number, number, number]; ry: number; radius: number; length: number; tone: number; tied: boolean; unrolled: number }[] = [];
+    const bottom = Math.ceil(count * 0.65);
+    for (let i = 0; i < count; i++) {
+      const layer = i < bottom ? 0 : 1;
+      const radius = 0.022 + r() * 0.022;
+      const reach = layer === 0 ? spread : spread * 0.55;
+      const a = r() * Math.PI * 2;
+      const d = Math.sqrt(r()) * reach;
+      scrolls.push({
+        p: [Math.cos(a) * d, radius + layer * 0.05, Math.sin(a) * d],
+        ry: r() * Math.PI,
+        radius,
+        length: 0.24 + r() * 0.2,
+        tone: Math.floor(r() * SCROLL_TONES.length),
+        tied: r() > 0.6,
+        unrolled: layer === 0 && r() > 0.8 ? 0.12 + r() * 0.1 : 0,
+      });
+    }
+    const sheets = Array.from({ length: Math.round(count / 3) }, () => {
+      const a = r() * Math.PI * 2;
+      const d = r() * spread * 1.1;
+      return { p: [Math.cos(a) * d, 0.002 + r() * 0.004, Math.sin(a) * d] as [number, number, number], ry: r() * Math.PI, rx: (r() - 0.5) * 0.12, tone: Math.floor(r() * SCROLL_TONES.length) };
+    });
+    return { scrolls, sheets };
+  }, [seed, count, spread]);
+  return (
+    <group>
+      {items.sheets.map((s, i) => (
+        <mesh key={`f${i}`} position={s.p} rotation={[-Math.PI / 2 + s.rx, 0, s.ry]}>
+          <planeGeometry args={[0.24, 0.32]} />
+          <meshStandardMaterial color={SCROLL_TONES[s.tone]} roughness={0.9} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+      {items.scrolls.map((s, i) => (
+        <group key={i} position={s.p} rotation={[0, s.ry, 0]}>
+          <Scroll position={[0, 0, 0]} rotation={[0, 0, Math.PI / 2]} radius={s.radius} length={s.length} tone={s.tone} tied={s.tied} unrolled={s.unrolled} />
+        </group>
+      ))}
     </group>
   );
 }
