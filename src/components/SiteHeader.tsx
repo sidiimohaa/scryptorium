@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Emblem } from "./Emblem";
 import { SearchButton } from "./SearchDialog";
 import { MobileNav } from "./MobileNav";
+import { AccountLink } from "./reader/AccountLink";
 
 export const NAV = [
   { href: "/abbaye", label: "L'Abbaye" },
@@ -27,7 +28,8 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <AccountLink />
           <SearchButton />
           <MobileNav items={NAV} />
         </div>

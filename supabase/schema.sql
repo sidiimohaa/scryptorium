@@ -257,3 +257,17 @@ alter default privileges in schema public grant all on tables to service_role;
 alter default privileges in schema public grant select on tables to anon;
 alter default privileges in schema public grant select, insert, update, delete on tables to authenticated;
 
+-- ─── Comptes lecteurs ──────────────────────────────────────────────────────
+-- Pseudo unique sans tenir compte de la casse.
+create unique index if not exists profiles_display_name_lower_key on profiles (lower(display_name));
+-- Chaque inscription crée son profil, avec un pseudo provisoire (jamais l'adresse e-mail) :
+-- le lecteur choisit le sien à sa première visite de /compte.
+create or replace function handle_new_reader() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into profiles (id, display_name) values (new.id, 'lecteur-' || substr(md5(new.id::text), 1, 8))
+  on conflict (id) do nothing;
+  return new;
+end $$;
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created after insert on auth.users for each row execute function handle_new_reader();
