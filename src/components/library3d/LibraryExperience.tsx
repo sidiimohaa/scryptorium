@@ -328,9 +328,15 @@ export function LibraryExperience({
       {entrance && (
         <div
           aria-hidden
-          className="entrance-veil pointer-events-none absolute inset-0 z-[70] transition-opacity duration-[1800ms] ease-out"
+          className="entrance-veil pointer-events-none absolute inset-0 z-[70] flex flex-col items-center justify-center transition-opacity duration-[1800ms] ease-out"
           style={{ opacity: veil ? 1 : 0 }}
-        />
+        >
+          {/* le nom de la salle, à l'encre, dans la lumière des portes */}
+          <p className="font-[family-name:var(--font-display)] text-4xl uppercase tracking-[0.42em] text-[#3a2416] md:text-6xl" style={{ paddingLeft: "0.42em" }}>
+            Bibliotheca
+          </p>
+          <p className="mt-4 font-[family-name:var(--font-serif)] text-lg italic text-[#5a3a22]">La Bibliothèque</p>
+        </div>
       )}
 
       {passage && <PassageVeil visible={veil} passage={passage} />}

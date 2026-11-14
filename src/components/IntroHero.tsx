@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from "re
 import { RoseWindow } from "./RoseWindow";
 import { StainedGlass } from "./StainedGlass";
 import { HomePreloader } from "./HomePreloader";
+import { PassageVeil } from "./PassageVeil";
 
 type Phase = "dark" | "glow" | "inscription" | "ready" | "opening";
 
@@ -19,8 +20,9 @@ const reducedMotion = () =>
  * ce même voile de lumière, sans rejouer d'ouverture de portes).
  * Séquence complète à la première visite, instantanée ensuite (rejouable).
  */
-export function IntroHero() {
-  const [homeReady, setHomeReady] = useState(false);
+export function IntroHero({ fromGate = false }: { fromGate?: boolean }) {
+  const [homeReady, setHomeReady] = useState(fromGate);
+  const [gateVeil, setGateVeil] = useState(fromGate);
   const onPreloaderComplete = useCallback(() => setHomeReady(true), []);
   const [phase, setPhase] = useState<Phase>("dark");
   const router = useRouter();
@@ -39,6 +41,16 @@ export function IntroHero() {
     } catch {}
     return () => t.forEach(clearTimeout);
   };
+
+  // Retour par la porte : le voile « Porta » se lève, et l'adresse perd son paramètre (un rechargement montre l'accueil normal).
+  useEffect(() => {
+    if (!fromGate) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("porte");
+    window.history.replaceState(window.history.state, "", url.pathname + url.search);
+    const t = setTimeout(() => setGateVeil(false), 350);
+    return () => clearTimeout(t);
+  }, [fromGate]);
 
   useEffect(() => {
     router.prefetch("/bibliotheque");
@@ -76,7 +88,7 @@ export function IntroHero() {
 
   return (
     <>
-    <HomePreloader onComplete={onPreloaderComplete} />
+    {fromGate ? <PassageVeil visible={gateVeil} passage={{ latin: "Porta", name: "La Porte" }} /> : <HomePreloader onComplete={onPreloaderComplete} />}
     <section
       aria-label="Entrée de la bibliothèque"
       data-phase={phase}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { leaveFor, type Passage } from "@/lib/passage";
 import { PassageVeil } from "./PassageVeil";
 
@@ -27,6 +28,16 @@ type Room = {
 };
 
 const ROOMS: Room[] = [
+  {
+    id: "porta",
+    name: "La Porte",
+    latin: "Porta",
+    status: "open",
+    href: "/?porte=1",
+    description: "La porte de l'abbaye : revenir au seuil, devant les vitraux, là où commence la visite.",
+    box: { x: 98, y: 132, w: 76, h: 56 },
+    fr: "la porte",
+  },
   {
     id: "bibliotheque",
     name: "La Bibliothèque",
@@ -144,7 +155,7 @@ export function AbbeyPlan({ current: here }: { current?: string } = {}) {
           </>
         )}
         <ul className="mt-8 space-y-2 border-t border-line pt-6">
-          {ROOMS.map((r) => (
+          {ROOMS.filter((r) => r.id !== "porta").map((r) => (
             <li key={r.id}>
               {r.status === "open" && r.href ? (
                 <Link href={r.href} onClick={enter(r)} onMouseEnter={() => setActive(r.id)} onFocus={() => setActive(r.id)} aria-current={r.id === here ? "location" : undefined} className="link-gilt flex items-baseline justify-between gap-3 text-parchment">
@@ -161,7 +172,8 @@ export function AbbeyPlan({ current: here }: { current?: string } = {}) {
           ))}
         </ul>
       </aside>
-      <PassageVeil visible={leaving !== null} passage={leaving} />
+      {/* À la racine du document : un parent animé (transform) enfermerait sinon le voile « fixed ». */}
+      {leaving && createPortal(<PassageVeil visible fadeIn passage={leaving} />, document.body)}
     </div>
   );
 }
@@ -280,7 +292,6 @@ function PlanDrawing({ active, here }: { active: string | null; here?: string })
       <rect x="50" y="88" width="900" height="500" rx="18" fill="none" stroke={INK} strokeWidth="1.2" strokeDasharray="10 4 2 4" />
 
       {/* porte et chemin vers l'église */}
-      <Decor x={104} y={136} w={68} h={48} label="PORTA" sub="la porterie" />
       <path d="M166 160 L232 160" stroke={SEPIA} strokeWidth="1.2" strokeDasharray="4 4" />
 
       {/* église : nef, tours, transept, chœur, abside */}

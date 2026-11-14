@@ -2,11 +2,17 @@
 import type { Passage } from "@/lib/passage";
 
 /** Voile de passage : nuit de chandelle soufflée, nom latin de la salle en lettres d'or. */
-export function PassageVeil({ visible, passage, tone = "#0b0908" }: { visible: boolean; passage: Passage | null; tone?: string }) {
+export function PassageVeil({ visible, passage, tone = "#0b0908", fadeIn = false }: {
+  visible: boolean;
+  passage: Passage | null;
+  tone?: string;
+  /** Départ : le voile naît en fondu. À l'arrivée, il est déjà là et se lève seulement. */
+  fadeIn?: boolean;
+}) {
   return (
     <div
       aria-hidden={!visible}
-      className={`pointer-events-none fixed inset-0 z-[90] flex flex-col items-center justify-center transition-opacity duration-[900ms] ease-[var(--ease-velvet)] ${visible ? "opacity-100" : "opacity-0"}`}
+      className={`pointer-events-none fixed inset-0 z-[90] flex flex-col items-center justify-center transition-opacity duration-[900ms] ease-[var(--ease-velvet)] ${visible ? `${fadeIn ? "passage-in " : ""}opacity-100` : "opacity-0"}`}
       style={{ background: `radial-gradient(70% 60% at 50% 50%, #1c140e 0%, ${tone} 70%)` }}
     >
       {passage && (
