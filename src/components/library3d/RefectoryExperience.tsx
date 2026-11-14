@@ -165,6 +165,8 @@ export function RefectoryExperience({ topics, reader, books, latest, initialThre
           />
         )}
       </div>
+      {/* vignettage doux sur les bords, comme une gravure éclairée à la chandelle */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgb(12_8_6/0.55)_100%)]" />
       {/* voile sombre en haut à gauche : le titre reste lisible sur la pierre claire */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgb(17_16_15/0.82),rgb(17_16_15/0.35)_38%,transparent_62%)]" />
       <div className={`pointer-events-none absolute inset-0 bg-[#1a1511] transition-opacity duration-[1400ms] ${veil ? "opacity-100" : "opacity-0"}`} />

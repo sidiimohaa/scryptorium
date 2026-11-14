@@ -361,7 +361,7 @@ function Chandelier({ drop, seed = 0 }: { drop: number; seed?: number }) {
 }
 
 /** Grand lustre central : cage gothique, deux étages de bougies et pampilles de cristal. */
-function GrandChandelier({ drop, reveal, lowPower }: {
+export function GrandChandelier({ drop, reveal, lowPower }: {
   drop: number;
   reveal: React.RefObject<number>;
   lowPower: boolean;
@@ -763,7 +763,7 @@ export function Inkwell() {
 }
 
 /** Chandelier de laiton à trois branches : pied tourné, deux bras en volute, trois bougies. */
-function Candelabra() {
+export function Candelabra() {
   const lathe = useMemo(() => {
     const pts = [
       [0.0, 0], [0.08, 0], [0.08, 0.006], [0.06, 0.014], [0.036, 0.03], [0.024, 0.06], [0.018, 0.12],

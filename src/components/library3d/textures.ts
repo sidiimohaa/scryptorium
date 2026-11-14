@@ -1003,3 +1003,201 @@ export function placeCardTexture(title: string, count: number, fonts: Fonts) {
   g.fillText(`${count} message${count > 1 ? "s" : ""}`, 192, 166);
   return finish(c);
 }
+
+/* ─── Réfectoire d'apparat : matières des grands appartements ─── */
+
+/** Voûte peinte : azur profond semé d'étoiles et de fleurons d'or (voûtes de chapelles royales). */
+export function paintedVaultTexture(seed = 29) {
+  const [c, g] = canvas(512, 512);
+  const r = rng(seed);
+  const grad = g.createRadialGradient(256, 256, 40, 256, 256, 380);
+  grad.addColorStop(0, "#26386e");
+  grad.addColorStop(1, "#141d40");
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 512, 512);
+  const img = g.getImageData(0, 0, 512, 512);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (r() - 0.5) * 10;
+    img.data[i] += n;
+    img.data[i + 1] += n;
+    img.data[i + 2] += n;
+  }
+  g.putImageData(img, 0, 0);
+  const star = (x: number, y: number, s: number) => {
+    g.save();
+    g.translate(x, y);
+    g.beginPath();
+    for (let k = 0; k < 10; k++) {
+      const a = (k / 10) * Math.PI * 2 - Math.PI / 2;
+      const rad = k % 2 ? s * 0.42 : s;
+      g.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+    }
+    g.closePath();
+    g.fill();
+    g.restore();
+  };
+  g.fillStyle = "#e3b955";
+  for (let y = 32; y < 512; y += 64) {
+    for (let x = (y / 64) % 2 ? 64 : 32; x < 512; x += 64) star(x, y, 9);
+  }
+  // fleurons aux croisées du semis
+  g.fillStyle = "rgba(227,185,85,0.85)";
+  for (let y = 64; y < 512; y += 128) {
+    for (let x = 64; x < 512; x += 128) {
+      for (let k = 0; k < 4; k++) {
+        g.beginPath();
+        g.ellipse(x + Math.cos((k * Math.PI) / 2) * 7, y + Math.sin((k * Math.PI) / 2) * 7, 6, 3, (k * Math.PI) / 2, 0, Math.PI * 2);
+        g.fill();
+      }
+    }
+  }
+  return finish(c, [6, 10]);
+}
+
+/** Marbre veiné (griotte rouge pour les colonnes, ou clair pour le dallage). */
+export function marbleTexture(base: string, vein: string, seed = 31, repeat: [number, number] = [1, 1]) {
+  const [c, g] = canvas(512, 512);
+  const r = rng(seed);
+  g.fillStyle = base;
+  g.fillRect(0, 0, 512, 512);
+  for (let k = 0; k < 26; k++) {
+    g.strokeStyle = vein;
+    g.globalAlpha = 0.15 + r() * 0.35;
+    g.lineWidth = 0.6 + r() * 2.4;
+    g.beginPath();
+    let x = r() * 512;
+    let y = r() * 512;
+    g.moveTo(x, y);
+    for (let s = 0; s < 14; s++) {
+      x += (r() - 0.35) * 70;
+      y += (r() - 0.5) * 50;
+      g.lineTo(x, y);
+    }
+    g.stroke();
+  }
+  g.globalAlpha = 1;
+  for (let k = 0; k < 60; k++) {
+    g.fillStyle = `rgba(255,255,255,${r() * 0.05})`;
+    g.beginPath();
+    g.arc(r() * 512, r() * 512, 10 + r() * 40, 0, Math.PI * 2);
+    g.fill();
+  }
+  return finish(c, repeat);
+}
+
+/** Dallage de marbre en damier : pierre claire veinée et cabochons sombres. */
+export function checkerMarbleTexture(seed = 37, repeat: [number, number] = [1, 1]) {
+  const [c, g] = canvas(512, 512);
+  const r = rng(seed);
+  const s = 128;
+  for (let y = 0; y < 512; y += s) {
+    for (let x = 0; x < 512; x += s) {
+      const dark = ((x + y) / s) % 2 === 1;
+      g.fillStyle = dark ? "#5a4c44" : "#ddd2bf";
+      g.fillRect(x, y, s, s);
+      g.strokeStyle = dark ? "rgba(200,180,150,0.25)" : "rgba(120,100,80,0.28)";
+      for (let k = 0; k < 4; k++) {
+        g.lineWidth = 0.5 + r() * 1.5;
+        g.beginPath();
+        g.moveTo(x + r() * s, y);
+        g.bezierCurveTo(x + r() * s, y + s * 0.3, x + r() * s, y + s * 0.7, x + r() * s, y + s);
+        g.stroke();
+      }
+      g.strokeStyle = "rgba(60,50,40,0.6)";
+      g.lineWidth = 1.5;
+      g.strokeRect(x + 0.75, y + 0.75, s - 1.5, s - 1.5);
+    }
+  }
+  return finish(c, repeat);
+}
+
+/** Damas cramoisi des tentures murales (soierie à motif ton sur ton). */
+export function damaskTexture(seed = 41) {
+  const [c, g] = canvas(256, 256);
+  const r = rng(seed);
+  g.fillStyle = "#6e1420";
+  g.fillRect(0, 0, 256, 256);
+  const img = g.getImageData(0, 0, 256, 256);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (r() - 0.5) * 12;
+    img.data[i] += n;
+    img.data[i + 1] += n * 0.4;
+    img.data[i + 2] += n * 0.4;
+  }
+  g.putImageData(img, 0, 0);
+  const motif = (cx: number, cy: number) => {
+    g.fillStyle = "rgba(150,40,52,0.55)";
+    g.beginPath();
+    g.ellipse(cx, cy, 22, 34, 0, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = "rgba(60,8,16,0.5)";
+    g.beginPath();
+    g.ellipse(cx, cy, 10, 20, 0, 0, Math.PI * 2);
+    g.fill();
+    g.strokeStyle = "rgba(170,60,70,0.45)";
+    g.lineWidth = 2;
+    for (const s of [-1, 1]) {
+      g.beginPath();
+      g.moveTo(cx, cy - 34);
+      g.quadraticCurveTo(cx + s * 36, cy - 10, cx + s * 18, cy + 30);
+      g.stroke();
+    }
+  };
+  motif(64, 64);
+  motif(192, 192);
+  motif(192, -64);
+  motif(-64, 192);
+  motif(64, 320);
+  motif(320, 64);
+  return finish(c, [1, 1]);
+}
+
+/** Chemin de velours cramoisi à galon d'or (allée centrale). */
+export function runnerTexture() {
+  const [c, g] = canvas(128, 512);
+  g.fillStyle = "#7a1622";
+  g.fillRect(0, 0, 128, 512);
+  g.fillStyle = "#c79a3e";
+  g.fillRect(6, 0, 8, 512);
+  g.fillRect(114, 0, 8, 512);
+  g.fillStyle = "#5a0e18";
+  g.fillRect(18, 0, 3, 512);
+  g.fillRect(107, 0, 3, 512);
+  g.fillStyle = "rgba(199,154,62,0.55)";
+  for (let y = 32; y < 512; y += 64) {
+    g.beginPath();
+    g.moveTo(64, y - 14);
+    g.lineTo(76, y);
+    g.lineTo(64, y + 14);
+    g.lineTo(52, y);
+    g.closePath();
+    g.fill();
+  }
+  return finish(c);
+}
+
+/** Nappe de lin damassé, blanc crème à motif discret. */
+export function tableclothTexture(seed = 43) {
+  const [c, g] = canvas(256, 256);
+  const r = rng(seed);
+  g.fillStyle = "#f1ebde";
+  g.fillRect(0, 0, 256, 256);
+  g.strokeStyle = "rgba(190,175,150,0.35)";
+  g.lineWidth = 1;
+  for (let y = 0; y <= 256; y += 32) {
+    for (let x = 0; x <= 256; x += 32) {
+      g.beginPath();
+      g.arc(x, y, 9, 0, Math.PI * 2);
+      g.stroke();
+    }
+  }
+  const img = g.getImageData(0, 0, 256, 256);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (r() - 0.5) * 6;
+    img.data[i] += n;
+    img.data[i + 1] += n;
+    img.data[i + 2] += n;
+  }
+  g.putImageData(img, 0, 0);
+  return finish(c);
+}
