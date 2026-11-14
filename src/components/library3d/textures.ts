@@ -1165,7 +1165,7 @@ export function checkerMarbleTexture(seed = 37, repeat: [number, number] = [1, 1
   for (let y = 0; y < 512; y += s) {
     for (let x = 0; x < 512; x += s) {
       const dark = ((x + y) / s) % 2 === 1;
-      g.fillStyle = dark ? "#5a4c44" : "#ddd2bf";
+      g.fillStyle = dark ? "#7a6250" : "#d6c6a8";
       g.fillRect(x, y, s, s);
       g.strokeStyle = dark ? "rgba(200,180,150,0.25)" : "rgba(120,100,80,0.28)";
       for (let k = 0; k < 4; k++) {

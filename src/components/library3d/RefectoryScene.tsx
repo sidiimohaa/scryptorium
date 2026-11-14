@@ -1,23 +1,20 @@
 "use client";
 /* eslint-disable react-hooks/immutability -- three.js objects are mutated imperatively inside useFrame, as R3F intends. */
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { PerformanceMonitor, Sparkles, useCursor } from "@react-three/drei";
+import { PerformanceMonitor, RoundedBox, Sparkles, useCursor } from "@react-three/drei";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { Candelabra, Candle, Copyist, Flame, GrandChandelier } from "./LibraryScene";
 import {
-  checkerMarbleTexture,
-  damaskTexture,
   limestoneTexture,
-  marbleTexture,
-  paintedVaultTexture,
   panelTexture,
   placeCardTexture,
   resolveFonts,
   runnerTexture,
   shaftTexture,
   tableclothTexture,
+  terracottaTexture,
   windowTexture,
   woodTexture,
   type Fonts,
@@ -92,7 +89,7 @@ export default function RefectoryScene(props: Props) {
       camera={{ fov: 52, near: 0.05, far: 60, position: [0, 2.8, -7] }}
       onCreated={({ gl, scene }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.04;
+        gl.toneMappingExposure = 1.12;
         scene.background = new THREE.Color("#140e0b");
         scene.fog = new THREE.Fog("#140e0b", 13, 28);
       }}
@@ -121,7 +118,7 @@ function Refectory({ places, selected, lectorView, onSelect, onLector, lector, l
       <Lights lowPower={lowPower} />
       <Hall lowPower={lowPower} />
       <Fireplace />
-      {TABLE_X.map((x) => <BanquetTable key={x} x={x} />)}
+      {TABLE_X.map((x) => <BanquetTable key={x} x={x} lowPower={lowPower} />)}
       {SLOTS.map((s, i) => (
         <Place key={i} slot={s} place={places[i] ?? null} selected={i === selectedSlot} fonts={fonts} onSelect={onSelect} />
       ))}
@@ -192,27 +189,41 @@ function CameraRig({ slot, lector }: { slot: { x: number; z: number } | null; le
   return null;
 }
 
-/* ─── Lumière : jour par les baies, feu de la cheminée, lustres, chaire ─── */
+/* ─── Lumière : soir d'hiver ; dernier jour par les baies, feu, lustres, candélabres, chaire ─── */
 
 function Lights({ lowPower }: { lowPower: boolean }) {
   const fire = useRef<THREE.PointLight>(null);
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
-    if (fire.current) fire.current.intensity = 7 * (1 + Math.sin(t * 8.1) * 0.08 + Math.sin(t * 17.3) * 0.06 + Math.sin(t * 2.7) * 0.05);
+    if (fire.current) fire.current.intensity = 9 * (1 + Math.sin(t * 8.1) * 0.08 + Math.sin(t * 17.3) * 0.06 + Math.sin(t * 2.7) * 0.05);
   });
   return (
     <>
-      <ambientLight color="#ffe2bc" intensity={0.16} />
-      <hemisphereLight args={["#f2e2c6", "#2a1410", 0.26]} />
-      <directionalLight color="#ffeccc" intensity={1.05} position={[8, 7, 3]} />
-      <pointLight ref={fire} color="#ff8a3a" position={[0, 0.9, HALL.z1 - 0.9]} distance={10} decay={1.5} />
+      <ambientLight color="#ffd9b0" intensity={0.09} />
+      <hemisphereLight args={["#e8cfa8", "#1e0f0a", 0.16]} />
+      <directionalLight color="#ffb877" intensity={0.5} position={[8, 4.5, 3]} />
+      <pointLight ref={fire} color="#ff8a3a" position={[0, 0.9, HALL.z1 - 0.9]} distance={11} decay={1.4} />
       <pointLight color="#ffb066" intensity={3.5} position={[PULPIT.x + 0.3, PULPIT.floor + 1.6, PULPIT.z]} distance={4} decay={1.6} />
-      {!lowPower && <pointLight color="#fff0d6" intensity={2.4} position={[3.6, 3, 4]} distance={7} decay={1.6} />}
+      {/* lueur sur la façade de la chaire et son escalier */}
+      <pointLight color="#ffb877" intensity={3} position={[-1.9, 1.5, PULPIT.z - 1.0]} distance={4.5} decay={1.5} />
+      {!lowPower && <pointLight color="#ffd7a0" intensity={1.6} position={[3.6, 3, 4]} distance={7} decay={1.6} />}
     </>
   );
 }
 
 /* ─── Architecture ─── */
+
+/* Matières de l'abbaye (pierre, fer, étain), propres au réfectoire. */
+let abbeyMats: ReturnType<typeof makeAbbey> | null = null;
+function makeAbbey() {
+  return {
+    stone: new THREE.MeshStandardMaterial({ color: "#cdb995", roughness: 0.9 }),
+    carved: new THREE.MeshStandardMaterial({ color: "#d8c5a0", roughness: 0.85 }),
+    iron: new THREE.MeshStandardMaterial({ color: "#2b2522", metalness: 0.7, roughness: 0.45 }),
+    pewter: new THREE.MeshStandardMaterial({ color: "#a29c90", metalness: 0.75, roughness: 0.35 }),
+  };
+}
+const abbey = () => (abbeyMats ??= makeAbbey());
 
 function Hall({ lowPower }: { lowPower: boolean }) {
   const len = HALL.z1 - HALL.z0;
@@ -220,30 +231,21 @@ function Hall({ lowPower }: { lowPower: boolean }) {
   const tex = useMemo(() => {
     const wainscot = panelTexture(7);
     wainscot.repeat.set(len / 1.6, 1);
-    const damask = damaskTexture();
-    damask.repeat.set(len / 0.5, (HALL.spring - WAINSCOT) / 0.5);
-    const damaskEnd = damaskTexture(47);
-    damaskEnd.repeat.set((HALL.half * 2) / 0.5, (HALL.spring - WAINSCOT) / 0.5);
     const wainscotEnd = panelTexture(11);
     wainscotEnd.repeat.set((HALL.half * 2) / 1.6, 1);
-    const runner = runnerTexture();
-    runner.wrapS = runner.wrapT = THREE.RepeatWrapping;
-    runner.repeat.set(1, 7);
     return {
-      floor: checkerMarbleTexture(37, [3.75, 6.7]),
+      floor: terracottaTexture(17, [HALL.half * 2 / 1.6, len / 1.6]),
       wainscot,
       wainscotEnd,
-      damask,
-      damaskEnd,
-      vault: paintedVaultTexture(),
-      tympan: limestoneTexture(19, [2.4, 1]),
-      marble: marbleTexture("#6a1d22", "#e9cdb8", 31, [1, 3]),
+      wall: limestoneTexture(19, [len / 2.5, (HALL.spring - WAINSCOT) / 2.5]),
+      wallEnd: limestoneTexture(23, [(HALL.half * 2) / 2.5, (HALL.spring - WAINSCOT) / 2.5]),
+      vault: limestoneTexture(29, [(Math.PI * HALL.half) / 2.5, len / 2.5]),
+      tympan: limestoneTexture(31, [(HALL.half * 2) / 2.5, HALL.rise / 2.5]),
       window: windowTexture(),
       shaft: shaftTexture(),
-      runner,
     };
   }, [len]);
-  const m = mats();
+  const a = abbey();
   const vault = useMemo(() => {
     // Sommets (r·sinθ, h, r·cosθ) ; après rotation de π/2 autour de x : (r·sinθ, −r·cosθ, h).
     // θ ∈ [π/2, 3π/2] garde la moitié haute (y ≥ 0), axe le long de la nef (z).
@@ -253,10 +255,10 @@ function Hall({ lowPower }: { lowPower: boolean }) {
   }, [len]);
   const yAt = (x: number) => HALL.spring + (HALL.rise / HALL.half) * Math.sqrt(Math.max(0, HALL.half * HALL.half - x * x)) - 0.06;
   const ribs = useMemo(() => {
-    const arc = (pts: THREE.Vector3[], r: number) => new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 56, r, 8, false);
+    const arc = (pts: THREE.Vector3[], r: number) => new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 56, r, 6, false);
     const list: { geo: THREE.TubeGeometry; main: boolean }[] = [];
     for (const z of BAYS) {
-      list.push({ geo: arc(Array.from({ length: 21 }, (_, i) => { const x = -HALL.half + (i / 20) * HALL.half * 2; return new THREE.Vector3(x, yAt(x), z); }), 0.09), main: true });
+      list.push({ geo: arc(Array.from({ length: 21 }, (_, i) => { const x = -HALL.half + (i / 20) * HALL.half * 2; return new THREE.Vector3(x, yAt(x), z); }), 0.11), main: true });
     }
     for (let b = 0; b < BAYS.length - 1; b++) {
       const za = BAYS[b];
@@ -266,118 +268,122 @@ function Hall({ lowPower }: { lowPower: boolean }) {
           const s = i / 20;
           const x = dir * (-HALL.half + s * HALL.half * 2);
           return new THREE.Vector3(x, yAt(x), za + (zb - za) * s);
-        }), 0.06), main: false });
+        }), 0.07), main: false });
       }
     }
-    // faîtière dorée tout le long de la nef
-    list.push({ geo: arc([new THREE.Vector3(0, yAt(0), HALL.z0), new THREE.Vector3(0, yAt(0), HALL.z1)], 0.05), main: false });
     return list;
   }, []);
-  const stone = { roughness: 0.92 } as const;
   return (
     <group>
-      {/* dallage de marbre en damier et chemin de velours dans l'allée */}
+      {/* sol de tomettes */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, midZ]}>
         <planeGeometry args={[HALL.half * 2, len]} />
-        <meshStandardMaterial map={tex.floor} roughness={0.2} metalness={0.05} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, (HALL.z0 + 0.6 + HALL.z1 - 1.6) / 2]}>
-        <planeGeometry args={[1.1, len - 2.2]} />
-        <meshStandardMaterial map={tex.runner} roughness={0.9} />
+        <meshStandardMaterial map={tex.floor} roughness={0.75} />
       </mesh>
 
-      {/* murs latéraux : lambris à filets d'or, puis tentures de damas cramoisi jusqu'à la retombée */}
+      {/* murs latéraux : lambris de chêne, puis pierre de taille jusqu'à la retombée */}
       {[-1, 1].map((s) => (
         <group key={s}>
           <mesh position={[s * HALL.half, WAINSCOT / 2, midZ]} rotation={[0, -s * Math.PI / 2, 0]}>
             <planeGeometry args={[len, WAINSCOT]} />
-            <meshStandardMaterial map={tex.wainscot} color="#8a5a3a" roughness={0.55} />
+            <meshStandardMaterial map={tex.wainscot} color="#c48e5e" roughness={0.6} />
           </mesh>
           <mesh position={[s * HALL.half, (HALL.spring + WAINSCOT) / 2, midZ]} rotation={[0, -s * Math.PI / 2, 0]}>
             <planeGeometry args={[len, HALL.spring - WAINSCOT]} />
-            <meshStandardMaterial map={tex.damask} roughness={0.75} />
+            <meshStandardMaterial map={tex.wall} color="#e6d5b6" roughness={0.92} />
           </mesh>
-          {/* cimaise, plinthe et corniche dorées */}
-          {[[WAINSCOT, 0.07, 0.06], [0.06, 0.12, 0.05], [HALL.spring - 0.05, 0.12, 0.12]].map(([y, h, d], i) => (
-            <mesh key={i} position={[s * (HALL.half - d / 2), y, midZ]} material={i === 1 ? m.goldSoft : m.gold}>
-              <boxGeometry args={[d, h, len]} />
-            </mesh>
-          ))}
+          {/* cimaise de chêne, plinthe et corniche de pierre */}
+          <mesh position={[s * (HALL.half - 0.03), WAINSCOT, midZ]}>
+            <boxGeometry args={[0.06, 0.07, len]} />
+            <meshStandardMaterial color="#5a3c26" roughness={0.6} />
+          </mesh>
+          <mesh position={[s * (HALL.half - 0.025), 0.06, midZ]} material={a.stone}>
+            <boxGeometry args={[0.05, 0.12, len]} />
+          </mesh>
+          <mesh position={[s * (HALL.half - 0.08), HALL.spring - 0.05, midZ]} material={a.carved}>
+            <boxGeometry args={[0.16, 0.14, len]} />
+          </mesh>
         </group>
       ))}
 
-      {/* voûte peinte d'azur étoilé, nervures et clés dorées */}
+      {/* voûte en berceau de pierre, arcs doubleaux et ogives de pierre, clés sculptées */}
       <mesh geometry={vault} position={[0, HALL.spring, midZ]} scale={[1, HALL.rise / HALL.half, 1]}>
-        <meshStandardMaterial map={tex.vault} side={THREE.BackSide} roughness={0.8} />
+        <meshStandardMaterial map={tex.vault} color="#d9c7a5" side={THREE.BackSide} roughness={0.95} />
       </mesh>
-      {ribs.map((r, i) => <mesh key={i} geometry={r.geo} material={r.main ? m.gold : m.goldSoft} />)}
+      {ribs.map((r, i) => <mesh key={i} geometry={r.geo} material={r.main ? a.carved : a.stone} />)}
       {BAYS.slice(0, -1).map((z) => (
-        <group key={z} position={[0, yAt(0) - 0.04, z + 2]}>
-          <mesh material={m.gold}>
-            <sphereGeometry args={[0.16, 18, 12]} />
+        <group key={z} position={[0, yAt(0) - 0.05, z + 2]}>
+          <mesh material={a.carved}>
+            <cylinderGeometry args={[0.2, 0.16, 0.12, 12]} />
           </mesh>
-          <mesh rotation={[Math.PI / 2, 0, 0]} material={m.gold}>
-            <torusGeometry args={[0.24, 0.035, 8, 24]} />
+          <mesh position={[0, -0.08, 0]} material={a.carved}>
+            <sphereGeometry args={[0.07, 12, 8]} />
           </mesh>
         </group>
       ))}
 
-      {/* tympans des pignons (pierre) au-dessus des tentures */}
+      {/* pignons : lambris, pierre, tympan */}
       {[HALL.z0, HALL.z1].map((z) => (
         <group key={z} rotation={[0, z > 0 ? Math.PI : 0, 0]} position={[0, 0, z]}>
           <mesh position={[0, WAINSCOT / 2, 0]}>
             <planeGeometry args={[HALL.half * 2, WAINSCOT]} />
-            <meshStandardMaterial map={tex.wainscotEnd} color="#8a5a3a" roughness={0.55} />
+            <meshStandardMaterial map={tex.wainscotEnd} color="#c48e5e" roughness={0.6} />
           </mesh>
           <mesh position={[0, (HALL.spring + WAINSCOT) / 2, 0]}>
             <planeGeometry args={[HALL.half * 2, HALL.spring - WAINSCOT]} />
-            <meshStandardMaterial map={tex.damaskEnd} roughness={0.75} />
+            <meshStandardMaterial map={tex.wallEnd} color="#e6d5b6" roughness={0.92} />
           </mesh>
           <mesh position={[0, HALL.spring + HALL.rise / 2, 0]}>
             <planeGeometry args={[HALL.half * 2, HALL.rise]} />
-            <meshStandardMaterial map={tex.tympan} {...stone} color="#e7dcc6" />
+            <meshStandardMaterial map={tex.tympan} color="#e6d5b6" roughness={0.92} />
           </mesh>
         </group>
       ))}
 
-      {/* colonnes de marbre griotte, base et chapiteau dorés */}
+      {/* colonnes engagées de pierre, base moulurée et chapiteau à crochets */}
       {BAYS.flatMap((z) => [-1, 1].map((s) => (
-        <group key={`${z}${s}`} position={[s * (HALL.half - 0.22), 0, z]}>
-          <mesh position={[0, 0.14, 0]} material={m.goldSoft}>
-            <boxGeometry args={[0.5, 0.28, 0.5]} />
+        <group key={`${z}${s}`} position={[s * (HALL.half - 0.2), 0, z]}>
+          <mesh position={[0, 0.14, 0]} material={a.stone}>
+            <cylinderGeometry args={[0.28, 0.3, 0.28, 8]} />
           </mesh>
-          <mesh position={[0, 0.32, 0]} material={m.gold}>
-            <torusGeometry args={[0.2, 0.035, 8, 24]} />
+          <mesh position={[0, 0.31, 0]} rotation={[Math.PI / 2, 0, 0]} material={a.carved}>
+            <torusGeometry args={[0.2, 0.04, 8, 24]} />
           </mesh>
-          <mesh position={[0, HALL.spring / 2, 0]}>
-            <cylinderGeometry args={[0.17, 0.19, HALL.spring - 0.55, 24]} />
-            <meshStandardMaterial map={tex.marble} roughness={0.18} metalness={0.05} />
+          <mesh position={[0, HALL.spring / 2, 0]} material={a.carved}>
+            <cylinderGeometry args={[0.17, 0.19, HALL.spring - 0.55, 20]} />
           </mesh>
-          <mesh position={[0, HALL.spring - 0.22, 0]} material={m.gold}>
-            <cylinderGeometry args={[0.3, 0.18, 0.3, 24]} />
+          <mesh position={[0, HALL.spring - 0.22, 0]} material={a.carved}>
+            <cylinderGeometry args={[0.3, 0.18, 0.3, 20]} />
           </mesh>
           {Array.from({ length: 8 }, (_, k) => {
-            const a = (k / 8) * Math.PI * 2;
+            const ang = (k / 8) * Math.PI * 2;
             return (
-              <mesh key={k} position={[Math.cos(a) * 0.24, HALL.spring - 0.2, Math.sin(a) * 0.24]} rotation={[0, -a, 0.5]} scale={[0.05, 0.12, 0.03]} material={m.gold}>
+              <mesh key={k} position={[Math.cos(ang) * 0.24, HALL.spring - 0.18, Math.sin(ang) * 0.24]} rotation={[0, -ang, 0.5]} scale={[0.05, 0.11, 0.035]} material={a.carved}>
                 <sphereGeometry args={[1, 8, 6]} />
               </mesh>
             );
           })}
-          <mesh position={[0, HALL.spring - 0.03, 0]} material={m.goldSoft}>
-            <boxGeometry args={[0.62, 0.08, 0.62]} />
+          <mesh position={[0, HALL.spring - 0.03, 0]} material={a.stone}>
+            <boxGeometry args={[0.6, 0.08, 0.6]} />
           </mesh>
         </group>
       )))}
 
-      {/* baies du mur droit, drapées de velours, et leurs rayons */}
+      {/* hautes lancettes du mur droit, ébrasement de pierre, et leurs rayons */}
       {BAYS.slice(0, -1).map((z) => (
         <group key={z} position={[HALL.half - 0.02, 0, z + 2]} rotation={[0, -Math.PI / 2, 0]}>
           <mesh position={[0, 2.25, 0]}>
             <planeGeometry args={[0.9, 1.9]} />
             <meshBasicMaterial map={tex.window} toneMapped={false} transparent opacity={0.95} />
           </mesh>
-          <Drapes />
+          {[-1, 1].map((s) => (
+            <mesh key={s} position={[s * 0.53, 2.2, 0.08]} material={a.stone}>
+              <boxGeometry args={[0.16, 2.0, 0.18]} />
+            </mesh>
+          ))}
+          <mesh position={[0, 1.25, 0.1]} material={a.stone}>
+            <boxGeometry args={[1.22, 0.1, 0.24]} />
+          </mesh>
           {!lowPower && (
             <mesh position={[0, 1.35, 1.4]} rotation={[-0.8, 0, 0]}>
               <planeGeometry args={[1, 3.6]} />
@@ -391,50 +397,6 @@ function Hall({ lowPower }: { lowPower: boolean }) {
       <group position={[-HALL.half + 0.03, HALL.spring - 0.1 - 3.2 / 1.4 / 2, PULPIT.z]} rotation={[0, Math.PI / 2, 0]}>
         <Tapestry width={3.2} />
       </group>
-      {/* tapisserie plus petite près de l'entrée */}
-      <group position={[-HALL.half + 0.03, 2.2, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <Tapestry width={2.5} />
-      </group>
-    </group>
-  );
-}
-
-/** Rideaux de velours cramoisi plissés, retenus par des embrasses, sous un lambrequin doré. */
-function Drapes() {
-  const m = mats();
-  const geo = useMemo(() => {
-    const g = new THREE.PlaneGeometry(0.62, 2.7, 24, 1);
-    const p = g.attributes.position as THREE.BufferAttribute;
-    for (let i = 0; i < p.count; i++) {
-      const x = p.getX(i);
-      const y = p.getY(i);
-      // plis verticaux, resserrés vers l'embrasse (au tiers bas)
-      const pinch = 1 - 0.45 * Math.exp(-((y + 0.45) ** 2) / 0.08);
-      p.setX(i, x * pinch);
-      p.setZ(i, Math.sin(x * 38) * 0.035 + 0.04);
-    }
-    g.computeVertexNormals();
-    return g;
-  }, []);
-  return (
-    <group>
-      {[-1, 1].map((s) => (
-        <group key={s} position={[s * 0.62, 1.75, 0.05]}>
-          <mesh geometry={geo} material={m.velvet} />
-          <mesh position={[s * -0.02, -0.45, 0.08]} rotation={[Math.PI / 2, 0, 0]} material={m.gold}>
-            <torusGeometry args={[0.1, 0.018, 6, 18]} />
-          </mesh>
-          <mesh position={[s * -0.02, -0.62, 0.1]} scale={[0.04, 0.09, 0.04]} material={m.gold}>
-            <sphereGeometry args={[1, 10, 8]} />
-          </mesh>
-        </group>
-      ))}
-      <mesh position={[0, 3.15, 0.08]} material={m.gold}>
-        <boxGeometry args={[1.9, 0.16, 0.1]} />
-      </mesh>
-      <mesh position={[0, 3.0, 0.1]} material={m.velvet}>
-        <boxGeometry args={[1.86, 0.22, 0.04]} />
-      </mesh>
     </group>
   );
 }
@@ -481,8 +443,8 @@ function Tapestry({ width }: { width: number }) {
 
 /** Cheminée monumentale au fond de la salle : piédroits, manteau, hotte au blason, feu de bûches. */
 function Fireplace() {
-  const m = mats();
-  const marble = useMemo(() => marbleTexture("#2f2b2a", "#bfb4a4", 53, [1, 1]), []);
+  const a = abbey();
+  const jamb = useMemo(() => limestoneTexture(53, [0.6, 1]), []);
   const hood = useMemo(() => limestoneTexture(61, [1.4, 1]), []);
   const arms = useMemo(() => {
     const t = new THREE.TextureLoader().load("/brand/armoiries-vitrail-480.webp");
@@ -498,18 +460,18 @@ function Fireplace() {
         <planeGeometry args={[1.8, 1.5]} />
         <meshStandardMaterial color="#120c0a" roughness={1} />
       </mesh>
-      {/* piédroits et manteau de marbre */}
+      {/* piédroits et manteau de pierre */}
       {[-1, 1].map((s) => (
         <mesh key={s} position={[s * 1.08, 0.82, 0.25]}>
           <boxGeometry args={[0.36, 1.64, 0.5]} />
-          <meshStandardMaterial map={marble} roughness={0.2} />
+          <meshStandardMaterial map={jamb} color="#d2bf9c" roughness={0.85} />
         </mesh>
       ))}
       <mesh position={[0, 1.72, 0.3]}>
         <boxGeometry args={[2.7, 0.2, 0.62]} />
-        <meshStandardMaterial map={marble} roughness={0.2} />
+        <meshStandardMaterial map={jamb} color="#d2bf9c" roughness={0.85} />
       </mesh>
-      <mesh position={[0, 1.6, 0.56]} material={m.gold}>
+      <mesh position={[0, 1.6, 0.56]} material={a.carved}>
         <boxGeometry args={[2.5, 0.05, 0.04]} />
       </mesh>
       {/* hotte de pierre au blason, jusqu'à la retombée de la voûte */}
@@ -517,9 +479,9 @@ function Fireplace() {
         <boxGeometry args={[2.3, 1.5, 0.42]} />
         <meshStandardMaterial map={hood} color="#d6c7aa" roughness={0.85} />
       </mesh>
-      {/* cadre doré du panneau armorié */}
+      {/* cadre de pierre sculptée du panneau armorié */}
       {[[0, 3.06, 1.5, 0.04], [0, 2.04, 1.5, 0.04], [-0.73, 2.55, 0.04, 1.06], [0.73, 2.55, 0.04, 1.06]].map(([x, y, w, h], i) => (
-        <mesh key={i} position={[x, y, 0.43]} material={m.gold}>
+        <mesh key={i} position={[x, y, 0.43]} material={a.carved}>
           <boxGeometry args={[w, h, 0.03]} />
         </mesh>
       ))}
@@ -527,12 +489,12 @@ function Fireplace() {
         <planeGeometry args={[0.62, 0.86]} />
         <meshStandardMaterial map={arms} transparent alphaTest={0.05} roughness={0.6} />
       </mesh>
-      <mesh position={[0, 3.32, 0.3]} material={m.gold}>
+      <mesh position={[0, 3.32, 0.3]} material={a.carved}>
         <boxGeometry args={[2.5, 0.08, 0.6]} />
       </mesh>
       {/* chenets, bûches et flammes */}
       {[-0.45, 0.45].map((x) => (
-        <mesh key={x} position={[x, 0.18, 0.35]} material={m.gold}>
+        <mesh key={x} position={[x, 0.18, 0.35]} material={a.iron}>
           <cylinderGeometry args={[0.04, 0.06, 0.36, 10]} />
         </mesh>
       ))}
@@ -553,24 +515,52 @@ function Fireplace() {
 
 /* ─── Mobilier ─── */
 
-/** Table de banquet : nappe damassée retombante, chemin de table, candélabres dorés, bancs de velours. */
-function BanquetTable({ x }: { x: number }) {
-  const m = mats();
+/**
+ * Retombée de nappe : plis verticaux qui s'ouvrent vers le bas, ourlet légèrement ondulé.
+ * Plan vertical, haut à y = +drop/2 ; le relief est porté par z (vers l'extérieur une fois tourné).
+ */
+function drapeGeometry(width: number, drop: number, foldsPerMeter = 7, amp = 0.022) {
+  const g = new THREE.PlaneGeometry(width, drop, Math.max(24, Math.round(width * 36)), 8);
+  const p = g.attributes.position as THREE.BufferAttribute;
+  const k = Math.PI * 2 * foldsPerMeter;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i);
+    const y = p.getY(i);
+    const t = (drop / 2 - y) / drop; // 0 en haut, 1 à l'ourlet
+    const wave = Math.sin(x * k) + 0.35 * Math.sin(x * k * 2.3 + 1.1);
+    p.setZ(i, wave * amp * Math.pow(t, 0.85) + t * 0.012);
+    if (t > 0.99) p.setY(i, y + Math.sin(x * k) * 0.012);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+
+/** Table du réfectoire : nappe de lin aux retombées plissées, chemin écru, chandeliers de laiton, bancs de chêne. */
+function BanquetTable({ x, lowPower }: { x: number; lowPower: boolean }) {
   const tex = useMemo(() => {
     const cloth = tableclothTexture();
     cloth.wrapS = cloth.wrapT = THREE.RepeatWrapping;
     cloth.repeat.set(1.2, 10);
-    const runner = runnerTexture();
-    runner.wrapS = runner.wrapT = THREE.RepeatWrapping;
-    runner.repeat.set(1, 6);
-    return { cloth, runner, wood: woodTexture("#3a2416", 83 + Math.round(x), true) };
+    const hang = tableclothTexture(45);
+    hang.wrapS = hang.wrapT = THREE.RepeatWrapping;
+    hang.repeat.set(10, 0.6);
+    const hangEnd = tableclothTexture(46);
+    hangEnd.wrapS = hangEnd.wrapT = THREE.RepeatWrapping;
+    hangEnd.repeat.set(1.2, 0.6);
+    return { cloth, hang, hangEnd, wood: woodTexture("#3a2416", 83 + Math.round(x), true) };
   }, [x]);
   const len = TABLE.z1 - TABLE.z0;
-  const mid = (TABLE.z0 + TABLE.z1) / 2;
   const W = TABLE.width + 0.12;
-  const drop = 0.42;
+  const drop = 0.58;
+  const drapes = useMemo(() => ({ side: drapeGeometry(len + 0.14, drop), end: drapeGeometry(W + 0.02, drop) }), [len, W]);
+  const leg = useMemo(() => {
+    const prof = [[0.05, 0], [0.04, 0.04], [0.028, 0.08], [0.036, 0.16], [0.024, 0.24], [0.022, 0.34], [0.04, 0.37]];
+    return new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(r, y)), 12);
+  }, []);
+  const candelabras = [-len / 2 + 1.7, -len / 6 + 0.35, len / 6 + 0.35, len / 2 - 1.3];
+  const benchLegs = [-len / 2 + 0.3, -len / 4, 0, len / 4, len / 2 - 0.3];
   return (
-    <group position={[x, 0, mid]}>
+    <group position={[x, 0, (TABLE.z0 + TABLE.z1) / 2]}>
       <mesh position={[0, TABLE.top - 0.05, 0]}>
         <boxGeometry args={[TABLE.width, 0.06, len]} />
         <meshStandardMaterial map={tex.wood} color="#6a4428" roughness={0.6} />
@@ -581,47 +571,62 @@ function BanquetTable({ x }: { x: number }) {
           <meshStandardMaterial map={tex.wood} color="#6a4428" roughness={0.6} />
         </mesh>
       ))}
-      {/* nappe : dessus et retombées */}
+      {/* nappe : dessus et retombées plissées */}
       <mesh position={[0, TABLE.top - 0.005, 0]}>
         <boxGeometry args={[W, 0.01, len + 0.12]} />
-        <meshStandardMaterial map={tex.cloth} color="#e9dfcb" roughness={0.88} />
+        <meshStandardMaterial map={tex.cloth} color="#ece3d0" roughness={0.88} />
       </mesh>
       {[-1, 1].map((s) => (
-        <mesh key={s} position={[s * W / 2, TABLE.top - drop / 2, 0]} rotation={[0, s * Math.PI / 2, 0]}>
-          <planeGeometry args={[len + 0.12, drop]} />
-          <meshStandardMaterial map={tex.cloth} color="#ddd1ba" roughness={0.88} side={THREE.DoubleSide} />
+        <mesh key={s} geometry={drapes.side} position={[s * W / 2, TABLE.top - drop / 2, 0]} rotation={[0, s * Math.PI / 2, 0]}>
+          <meshStandardMaterial map={tex.hang} color="#e2d7c2" roughness={0.9} side={THREE.DoubleSide} />
         </mesh>
       ))}
       {[-1, 1].map((s) => (
-        <mesh key={`e${s}`} position={[0, TABLE.top - drop / 2, s * (len / 2 + 0.06)]}>
-          <planeGeometry args={[W, drop]} />
-          <meshStandardMaterial map={tex.cloth} color="#ddd1ba" roughness={0.88} side={THREE.DoubleSide} />
+        <mesh key={`e${s}`} geometry={drapes.end} position={[0, TABLE.top - drop / 2, s * (len / 2 + 0.06)]} rotation={[0, s > 0 ? 0 : Math.PI, 0]}>
+          <meshStandardMaterial map={tex.hangEnd} color="#e2d7c2" roughness={0.9} side={THREE.DoubleSide} />
         </mesh>
       ))}
-      {/* chemin de table cramoisi et or */}
+      {/* chemin de lin écru à liteaux bruns, qui retombe aux deux bouts */}
       <mesh position={[0, TABLE.top + 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[0.22, len - 0.2]} />
-        <meshStandardMaterial map={tex.runner} roughness={0.85} />
+        <planeGeometry args={[0.26, len + 0.1]} />
+        <meshStandardMaterial color="#cbb894" roughness={0.95} />
       </mesh>
-      {/* candélabres dorés le long de la table */}
-      {[-len / 2 + 1.7, -len / 6 + 0.35, len / 6 + 0.35, len / 2 - 1.3].map((z) => (
+      {[-1, 1].map((s) => (
+        <mesh key={`b${s}`} position={[s * 0.1, TABLE.top + 0.003, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.018, len + 0.1]} />
+          <meshStandardMaterial color="#7a5638" roughness={0.95} />
+        </mesh>
+      ))}
+      {[-1, 1].map((s) => (
+        <mesh key={`r${s}`} position={[0, TABLE.top - 0.16, s * (len / 2 + 0.08)]} rotation={[0, s > 0 ? 0 : Math.PI, 0]}>
+          <planeGeometry args={[0.26, 0.32]} />
+          <meshStandardMaterial color="#cbb894" roughness={0.95} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+      {/* chandeliers de laiton le long de la table, chacun avec sa lueur */}
+      {candelabras.map((z) => (
         <group key={z} position={[0, TABLE.top, z]} scale={1.55} rotation={[0, Math.PI / 2, 0]}>
           <Candelabra />
         </group>
       ))}
-      {/* bancs garnis de velours, piétement doré */}
+      {!lowPower &&
+        [candelabras[0], candelabras[2]].map((z) => (
+          <pointLight key={`l${z}`} color="#ffae5c" intensity={2.2} position={[0, TABLE.top + 0.6, z + 0.6]} distance={4} decay={1.5} />
+        ))}
+      {/* bancs de chêne massif sur pieds tournés */}
       {[-1, 1].map((s) => (
-        <group key={s} position={[s * 0.74, 0, 0]}>
-          <mesh position={[0, 0.43, 0]} material={m.velvet}>
-            <boxGeometry args={[0.34, 0.08, len - 0.2]} />
+        <group key={s} position={[s * 0.78, 0, 0]}>
+          <RoundedBox args={[0.36, 0.06, len - 0.2]} radius={0.015} smoothness={2} position={[0, 0.43, 0]}>
+            <meshStandardMaterial map={tex.wood} color="#b07a4c" roughness={0.6} />
+          </RoundedBox>
+          <mesh position={[0, 0.37, 0]}>
+            <boxGeometry args={[0.3, 0.06, len - 0.3]} />
+            <meshStandardMaterial map={tex.wood} color="#8a5c38" roughness={0.6} />
           </mesh>
-          <mesh position={[0, 0.385, 0]} material={m.goldSoft}>
-            <boxGeometry args={[0.36, 0.03, len - 0.18]} />
-          </mesh>
-          {[-len / 2 + 0.3, -len / 4, 0, len / 4, len / 2 - 0.3].map((z) =>
+          {benchLegs.map((z) =>
             [-1, 1].map((t) => (
-              <mesh key={`${z}${t}`} position={[t * 0.13, 0.185, z]} material={m.goldSoft}>
-                <cylinderGeometry args={[0.022, 0.016, 0.37, 8]} />
+              <mesh key={`${z}${t}`} geometry={leg} position={[t * 0.13, 0, z]}>
+                <meshStandardMaterial map={tex.wood} color="#8a5c38" roughness={0.55} />
               </mesh>
             )),
           )}
@@ -632,8 +637,8 @@ function BanquetTable({ x }: { x: number }) {
 }
 
 /**
- * Un couvert dressé : sous-assiette dorée, assiette de porcelaine à filet d'or, verre de cristal,
- * couverts d'argent. Pris par un sujet : feuillet à son titre, cliquable ; chandelle s'il est animé.
+ * Un couvert de réfectoire : plat d'étain, écuelle de terre vernissée, gobelet d'étain,
+ * cuillère et couteau. Pris par un sujet : feuillet à son titre, cliquable ; chandelle s'il est animé.
  */
 function Place({ slot, place, selected, fonts, onSelect }: {
   slot: { x: number; z: number; side: 1 | -1 };
@@ -642,7 +647,6 @@ function Place({ slot, place, selected, fonts, onSelect }: {
   fonts: Fonts;
   onSelect: (id: string) => void;
 }) {
-  const m = mats();
   const [hovered, setHovered] = useState(false);
   useCursor(hovered && Boolean(place));
   const card = useMemo(() => (place ? placeCardTexture(place.title, place.postCount, fonts) : null), [place, fonts]);
@@ -669,18 +673,21 @@ function Place({ slot, place, selected, fonts, onSelect }: {
     >
       <mesh position={[0, 0.004, 0]}>
         <cylinderGeometry args={[0.14, 0.135, 0.008, 36]} />
-        <meshStandardMaterial color="#d9ad52" metalness={0.9} roughness={0.25} emissive={glow ? "#7a5210" : "#000000"} emissiveIntensity={glow ? 0.8 : 0} />
+        <meshStandardMaterial color="#a29c90" metalness={0.75} roughness={0.35} emissive={glow ? "#7a5210" : "#000000"} emissiveIntensity={glow ? 0.8 : 0} />
       </mesh>
-      <mesh position={[0, 0.012, 0]} material={m.porcelain}>
-        <cylinderGeometry args={[0.11, 0.075, 0.012, 36]} />
+      <mesh position={[0, 0.026, 0]}>
+        <cylinderGeometry args={[0.085, 0.05, 0.04, 28, 1, true]} />
+        <meshStandardMaterial color="#8a5a32" roughness={0.35} side={THREE.DoubleSide} />
       </mesh>
-      <mesh position={[0, 0.0185, 0]} rotation={[Math.PI / 2, 0, 0]} material={m.gold}>
-        <torusGeometry args={[0.103, 0.0035, 6, 40]} />
+      <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.05, 24]} />
+        <meshStandardMaterial color="#6e4426" roughness={0.4} />
       </mesh>
-      <mesh geometry={goblet} position={[0.16, 0, -0.13]} material={m.crystal} />
+      <mesh geometry={goblet} position={[0.16, 0, -0.13]} material={abbey().pewter} />
       {[-1, 1].map((s) => (
-        <mesh key={s} position={[s * 0.165, 0.003, 0]} material={m.silver}>
+        <mesh key={s} position={[s * 0.165, 0.003, 0]} material={s > 0 ? abbey().pewter : undefined}>
           <boxGeometry args={[0.014, 0.004, 0.17]} />
+          {s < 0 && <meshStandardMaterial color="#6e4c32" roughness={0.6} />}
         </mesh>
       ))}
       {place && card && (
@@ -692,7 +699,7 @@ function Place({ slot, place, selected, fonts, onSelect }: {
           </mesh>
           {place.active && (
             <group position={[-0.17, 0, -0.12]}>
-              <mesh position={[0, 0.008, 0]} material={m.gold}>
+              <mesh position={[0, 0.008, 0]} material={abbey().pewter}>
                 <cylinderGeometry args={[0.03, 0.035, 0.016, 12]} />
               </mesh>
               <group position={[0, 0.016, 0]}>
@@ -713,7 +720,8 @@ function Place({ slot, place, selected, fonts, onSelect }: {
 }
 
 /**
- * Chaire du lecteur, contre le mur gauche : estrade de pierre ornée d'or, parement de velours, escalier.
+ * Chaire du lecteur, contre le mur gauche : tribune de chêne à panneaux moulurés, balustrade de balustres
+ * tournés, poteaux d'angle à pommeaux, parement brodé, escalier de bois à rampe.
  * Le vieux moine y recopie le dernier message publié.
  */
 function Pulpit({ lector, onLector }: { lector: CopyistNote | null; onLector: () => void }) {
@@ -721,9 +729,28 @@ function Pulpit({ lector, onLector }: { lector: CopyistNote | null; onLector: ()
   const [hovered, setHovered] = useState(false);
   useCursor(hovered);
   const wood = useMemo(() => woodTexture("#4a3020", 91, true), []);
+  const panels = useMemo(() => {
+    const t = panelTexture(17);
+    t.repeat.set(2.4, 1);
+    return t;
+  }, []);
   const runner = useMemo(() => runnerTexture(), []);
+  const baluster = useMemo(() => {
+    const prof = [[0.03, 0], [0.032, 0.03], [0.018, 0.07], [0.034, 0.2], [0.04, 0.28], [0.02, 0.4], [0.016, 0.5], [0.026, 0.56], [0.03, 0.6]];
+    return new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(r, y)), 10);
+  }, []);
   const F = PULPIT.floor;
   const W = HALL.half - 2.9;
+  const x0 = -HALL.half;
+  const front = x0 + W; // bord de la tribune côté salle
+  const oak = <meshStandardMaterial map={wood} color="#b07a4c" roughness={0.5} />;
+  const carved = <meshStandardMaterial map={panels} color="#c89464" roughness={0.5} />;
+  /* balustres : façade (le long de z) et deux côtés (le long de x) */
+  const rail = [
+    ...Array.from({ length: 12 }, (_, i) => [front - 0.06, PULPIT.z - 0.88 + i * 0.16] as const),
+    ...[-1, 1].flatMap((sz) => Array.from({ length: 8 }, (_, i) => [x0 + 0.18 + i * 0.16, PULPIT.z + sz * 0.95] as const)),
+  ];
+  const posts = [[front - 0.06, PULPIT.z - 0.97], [front - 0.06, PULPIT.z + 0.97], [x0 + 0.06, PULPIT.z + 0.97]] as const;
   return (
     <group
       onClick={(e) => {
@@ -736,35 +763,88 @@ function Pulpit({ lector, onLector }: { lector: CopyistNote | null; onLector: ()
       }}
       onPointerOut={() => setHovered(false)}
     >
-      <mesh position={[-HALL.half + W / 2, F / 2, PULPIT.z]} material={m.stone}>
+      {/* caisson à panneaux moulurés, socle et corniche */}
+      <mesh position={[x0 + W / 2, F / 2, PULPIT.z]}>
         <boxGeometry args={[W, F, 2]} />
+        {carved}
       </mesh>
-      <mesh position={[-HALL.half + W - 0.05, F + 0.36, PULPIT.z]} material={m.stone}>
-        <boxGeometry args={[0.1, 0.72, 2]} />
+      <mesh position={[x0 + W / 2 + 0.02, 0.08, PULPIT.z]}>
+        <boxGeometry args={[W + 0.06, 0.16, 2.06]} />
+        {oak}
       </mesh>
-      {[-1, 1].map((s) => (
-        <mesh key={s} position={[-HALL.half + W / 2, F + 0.36, PULPIT.z + s * 0.97]} material={m.stone}>
-          <boxGeometry args={[W, 0.72, 0.06]} />
+      <mesh position={[x0 + W / 2 + 0.03, F - 0.03, PULPIT.z]}>
+        <boxGeometry args={[W + 0.1, 0.08, 2.1]} />
+        {oak}
+      </mesh>
+      {/* balustrade : lisse basse, balustres tournés, main courante */}
+      {rail.map(([x, z], i) => (
+        <mesh key={i} geometry={baluster} position={[x, F + 0.04, z]}>
+          {oak}
         </mesh>
       ))}
-      {/* moulures dorées : appui du garde-corps et corniche de l'estrade */}
-      <mesh position={[-HALL.half + W - 0.05, F + 0.74, PULPIT.z]} material={m.gold}>
-        <boxGeometry args={[0.18, 0.06, 2.06]} />
+      <mesh position={[front - 0.06, F + 0.02, PULPIT.z]}>
+        <boxGeometry args={[0.1, 0.04, 2]} />
+        {oak}
       </mesh>
-      <mesh position={[-HALL.half + W / 2 + 0.03, F - 0.04, PULPIT.z]} material={m.goldSoft}>
-        <boxGeometry args={[W + 0.08, 0.1, 2.08]} />
+      <mesh position={[front - 0.06, F + 0.68, PULPIT.z]}>
+        <boxGeometry args={[0.13, 0.06, 2.02]} />
+        {oak}
       </mesh>
-      {/* parement de velours cramoisi galonné d'or, retombant du garde-corps */}
-      <mesh position={[-HALL.half + W + 0.012, F + 0.2, PULPIT.z]} rotation={[0, Math.PI / 2, 0]}>
-        <planeGeometry args={[0.8, 1.05]} />
-        <meshStandardMaterial map={runner} roughness={0.85} />
+      {[-1, 1].map((sz) => (
+        <group key={sz}>
+          <mesh position={[x0 + W / 2, F + 0.02, PULPIT.z + sz * 0.95]}>
+            <boxGeometry args={[W, 0.04, 0.08]} />
+            {oak}
+          </mesh>
+          <mesh position={[x0 + W / 2, F + 0.68, PULPIT.z + sz * 0.95]}>
+            <boxGeometry args={[W, 0.06, 0.11]} />
+            {oak}
+          </mesh>
+        </group>
+      ))}
+      {/* poteaux d'angle à pommeau tourné */}
+      {posts.map(([x, z], i) => (
+        <group key={i} position={[x, F, z]}>
+          <mesh position={[0, 0.4, 0]}>
+            <boxGeometry args={[0.1, 0.8, 0.1]} />
+            {oak}
+          </mesh>
+          <mesh position={[0, 0.86, 0]}>
+            <sphereGeometry args={[0.05, 14, 10]} />
+            {oak}
+          </mesh>
+        </group>
+      ))}
+      {/* parement de velours cramoisi galonné d'or, retombant de la main courante */}
+      <mesh position={[front + 0.012, F + 0.22, PULPIT.z]} rotation={[0, Math.PI / 2, 0]}>
+        <planeGeometry args={[0.8, 1.0]} />
+        <meshStandardMaterial map={runner} roughness={0.85} side={THREE.DoubleSide} />
       </mesh>
-      {/* escalier vers l'entrée */}
+      {/* console sculptée sous la tribune */}
+      <mesh position={[front - 0.12, F - 0.32, PULPIT.z]} rotation={[0, 0, 0.5]}>
+        <boxGeometry args={[0.12, 0.5, 0.5]} />
+        {oak}
+      </mesh>
+      {/* escalier de chêne vers l'entrée, avec sa rampe */}
       {Array.from({ length: 5 }, (_, i) => (
-        <mesh key={i} position={[-HALL.half + 0.55, (F * (i + 1)) / 10, PULPIT.z - 1.1 - (4 - i) * 0.26]} material={m.stone}>
-          <boxGeometry args={[1, (F * (i + 1)) / 5, 0.26]} />
-        </mesh>
+        <group key={i}>
+          <mesh position={[x0 + 0.55, (F * (i + 1)) / 10, PULPIT.z - 1.1 - (4 - i) * 0.26]}>
+            <boxGeometry args={[1, (F * (i + 1)) / 5, 0.26]} />
+            {carved}
+          </mesh>
+          <mesh position={[x0 + 0.57, (F * (i + 1)) / 5 + 0.012, PULPIT.z - 1.1 - (4 - i) * 0.26]}>
+            <boxGeometry args={[1.04, 0.025, 0.28]} />
+            {oak}
+          </mesh>
+          <mesh geometry={baluster} position={[x0 + 1.0, (F * (i + 1)) / 5 + 0.02, PULPIT.z - 1.1 - (4 - i) * 0.26]} scale={[1, 1.2, 1]}>
+            {oak}
+          </mesh>
+        </group>
       ))}
+      <mesh position={[x0 + 1.0, F * 0.6 + 0.76, PULPIT.z - 1.62]} rotation={[-Math.atan2(F * 0.8, 1.04), 0, 0]}>
+        <boxGeometry args={[0.07, 0.05, 1.42]} />
+        {oak}
+      </mesh>
       {/* table du lecteur, banc, et le moine : repère de la table du scriptorium tourné vers la salle */}
       <group position={[PULPIT.x, F, PULPIT.z]} rotation={[0, -Math.PI / 2, 0]}>
         <mesh position={[0.06, 0.79, 0.42]}>
