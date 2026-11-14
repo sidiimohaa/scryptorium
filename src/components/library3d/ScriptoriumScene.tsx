@@ -8,7 +8,6 @@ import { Candelabra, Candle, Copyist, GrandChandelier } from "./LibraryScene";
 import {
   flagstoneTexture,
   generatedCoverTexture,
-  moonWindowTexture,
   pageEdgeTexture,
   resolveFonts,
   shaftTexture,
@@ -16,6 +15,8 @@ import {
   woodTexture,
 } from "./textures";
 import type { CopyistNote } from "./types";
+import { useParisDaylight, type Daylight } from "@/lib/daylight";
+import { DayNightGlass, SkyTone, lerp, mix, shaftTint } from "./DayNight";
 
 /**
  * Le scriptorium, de nuit : une longue salle voûtée en berceau, rythmée d'arcs doubleaux sur colonnes
@@ -84,7 +85,10 @@ export default function ScriptoriumScene(props: Props) {
 function Scriptorium({ book, copyist, onCopyistDone, lowPower, onReady }: Props) {
   const ready = useRef(false);
   const lit = useRef(1);
+  const dl = useParisDaylight();
   useFrame(() => {
+    // le grand lustre brûle plus bas le jour, quand les lancettes éclairent la salle
+    lit.current = lerp(0.45, 1, dl.night);
     if (!ready.current) {
       ready.current = true;
       onReady?.();
@@ -93,8 +97,9 @@ function Scriptorium({ book, copyist, onCopyistDone, lowPower, onReady }: Props)
   return (
     <>
       <CameraRig />
-      <Lights lowPower={lowPower} />
-      <Hall lowPower={lowPower} />
+      <SkyTone daylight={dl} day="#1c1612" night="#0a0807" />
+      <Lights lowPower={lowPower} daylight={dl} />
+      <Hall lowPower={lowPower} daylight={dl} />
       {/* table du copiste : même repère que le bureau de la bibliothèque (centré en z = 1) */}
       <group position={[0, 0, 1]}>
         <CopyistDesk />
@@ -179,7 +184,7 @@ function CameraRig() {
 
 /* ─── Lumière : chandelles, lustre, appliques ; lune par les lancettes ─── */
 
-function Lights({ lowPower }: { lowPower: boolean }) {
+function Lights({ lowPower, daylight: d }: { lowPower: boolean; daylight: Daylight }) {
   const candle = useRef<THREE.PointLight>(null);
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
@@ -187,11 +192,11 @@ function Lights({ lowPower }: { lowPower: boolean }) {
   });
   return (
     <>
-      <ambientLight color="#ffd6a8" intensity={0.2} />
-      <hemisphereLight args={["#3a4560", "#2a1a10", 0.45]} />
-      {/* clair de lune entrant par les lancettes de gauche */}
-      <directionalLight color="#8fa6d6" intensity={0.45} position={[-6, 5, 2]} />
-      <pointLight color="#7d94c8" intensity={2.2} position={[0, 3.2, 9.3]} distance={6} decay={1.6} />
+      <ambientLight color="#ffd6a8" intensity={lerp(0.2, 0.5, d.sun)} />
+      <hemisphereLight args={[mix("#3a4560", "#eadcbe", d.sun), "#2a1a10", lerp(0.45, 1.15, d.sun)]} />
+      {/* par les lancettes de gauche : soleil le jour, doré à l'aube et au crépuscule, lune la nuit */}
+      <directionalLight color={mix("#8fa6d6", "#ffe6bf", d.sun).lerp(new THREE.Color("#ffad66"), d.warm * 0.6)} intensity={lerp(0.45, 2.6, d.sun)} position={[-6, 5, 2]} />
+      <pointLight color={mix("#7d94c8", "#ffd9a0", d.sun)} intensity={lerp(2.2, 4.5, d.sun)} position={[0, 3.2, 9.3]} distance={6} decay={1.6} />
       {/* lueur chaude sur la lunette, près du chevet */}
       <pointLight color="#ffcf8a" intensity={1.6} position={[0.6, 2.2, 8.4]} distance={3.2} decay={1.6} />
       {/* chandelier de la table d'appoint (le grand lustre porte sa propre lumière) */}
@@ -205,7 +210,7 @@ function Lights({ lowPower }: { lowPower: boolean }) {
 
 /* ─── Salle : dallage, berceau sur doubleaux, colonnes engagées, lancettes ─── */
 
-function Hall({ lowPower }: { lowPower: boolean }) {
+function Hall({ lowPower, daylight }: { lowPower: boolean; daylight: Daylight }) {
   const depth = HALL.z1 - HALL.z0;
   const midZ = (HALL.z1 + HALL.z0) / 2;
   const tex = useMemo(
@@ -214,7 +219,6 @@ function Hall({ lowPower }: { lowPower: boolean }) {
       wall: stoneTexture(5, [depth / 1.3, HALL.spring / 1.3]),
       end: stoneTexture(9, [1 / 1.3, 1 / 1.3]),
       vault: stoneTexture(23, [(Math.PI * HALL.x) / 1.3, depth / 1.3]),
-      moon: moonWindowTexture(19),
       shaft: shaftTexture(),
     }),
     [depth],
@@ -284,22 +288,23 @@ function Hall({ lowPower }: { lowPower: boolean }) {
       {/* lancettes du mur gauche, au clair de lune */}
       {BAYS.map((z, i) => (
         <group key={z} position={[-HALL.x + 0.02, 2.25, z]} rotation={[0, Math.PI / 2, 0]}>
-          <Lancet tex={tex.moon} w={0.85} h={1.9} />
+          <Lancet daylight={daylight} w={0.85} h={1.9} />
           {!lowPower && i < 3 && (
             <mesh position={[0, -0.75, 1.3]} rotation={[-0.8, 0, 0]}>
               <planeGeometry args={[0.95, 3.1]} />
-              <meshBasicMaterial map={tex.shaft} color="#9fb4e6" transparent opacity={0.1} depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
+              <meshBasicMaterial map={tex.shaft} color={shaftTint(daylight)} transparent opacity={lerp(0.1, 0.17, daylight.sun)} depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
             </mesh>
           )}
         </group>
       ))}
       {/* grande lancette du chevet, derrière le copiste, et oculus */}
       <group position={[0, 2.9, HALL.z1 - 0.02]} rotation={[0, Math.PI, 0]}>
-        <Lancet tex={tex.moon} w={1.25} h={2.8} />
+        <Lancet daylight={daylight} w={1.25} h={2.8} />
       </group>
+      {/* oculus : verre bleu la nuit, ambré le jour (même verre que les lancettes) */}
       <mesh position={[0, 5.6, HALL.z1 - 0.03]} rotation={[0, Math.PI, 0]}>
         <circleGeometry args={[0.55, 32]} />
-        <meshBasicMaterial map={tex.moon} toneMapped={false} />
+        <meshBasicMaterial color={mix("#4a5e8c", "#f3dcaa", daylight.sun).lerp(new THREE.Color("#ffb877"), daylight.warm * 0.5)} toneMapped={false} />
       </mesh>
       <mesh position={[0, 5.6, HALL.z1 - 0.06]}>
         <torusGeometry args={[0.6, 0.08, 6, 32]} />
@@ -354,13 +359,10 @@ function Sconce({ position }: { position: [number, number, number] }) {
   );
 }
 
-function Lancet({ tex, w, h }: { tex: THREE.Texture; w: number; h: number }) {
+function Lancet({ daylight, w, h }: { daylight: Daylight; w: number; h: number }) {
   return (
     <group>
-      <mesh>
-        <planeGeometry args={[w, h]} />
-        <meshBasicMaterial map={tex} toneMapped={false} transparent opacity={0.95} />
-      </mesh>
+      <DayNightGlass daylight={daylight} w={w} h={h} />
       {/* ébrasement : piédroits et appui */}
       {[-1, 1].map((s) => (
         <mesh key={s} position={[s * (w / 2 + 0.08), -0.05, 0.08]}>

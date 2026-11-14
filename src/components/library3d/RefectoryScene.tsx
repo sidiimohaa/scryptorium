@@ -15,11 +15,12 @@ import {
   shaftTexture,
   tableclothTexture,
   terracottaTexture,
-  windowTexture,
   woodTexture,
   type Fonts,
 } from "./textures";
 import type { CopyistNote } from "./types";
+import { useParisDaylight, type Daylight } from "@/lib/daylight";
+import { DayNightGlass, SkyTone, lerp, mix, shaftTint } from "./DayNight";
 
 /**
  * Le Réfectoire d'apparat : la nef voûtée d'une abbaye, habillée comme les grands appartements
@@ -104,7 +105,10 @@ function Refectory({ places, selected, lectorView, onSelect, onLector, lector, l
   const fonts = useMemo(() => resolveFonts(), []);
   const ready = useRef(false);
   const lit = useRef(1);
+  const dl = useParisDaylight();
   useFrame(() => {
+    // lustres plus discrets en plein jour
+    lit.current = lerp(0.3, 0.55, dl.night);
     if (!ready.current) {
       ready.current = true;
       onReady?.();
@@ -113,10 +117,11 @@ function Refectory({ places, selected, lectorView, onSelect, onLector, lector, l
   const selectedSlot = selected ? places.findIndex((p) => p.id === selected) : -1;
   return (
     <>
-      <Reflections />
+      <Reflections intensity={lerp(0.08, 0.32, dl.sun)} />
       <CameraRig slot={selectedSlot >= 0 ? SLOTS[selectedSlot] : null} lector={lectorView} />
-      <Lights lowPower={lowPower} />
-      <Hall lowPower={lowPower} />
+      <SkyTone daylight={dl} day="#1e1712" night="#0c0907" />
+      <Lights lowPower={lowPower} daylight={dl} />
+      <Hall lowPower={lowPower} daylight={dl} />
       <Fireplace />
       {TABLE_X.map((x) => <BanquetTable key={x} x={x} lowPower={lowPower} />)}
       {SLOTS.map((s, i) => (
@@ -134,19 +139,22 @@ function Refectory({ places, selected, lectorView, onSelect, onLector, lector, l
 }
 
 /** Reflets : un environnement de salle neutre (local, sans téléchargement) pour l'or, le cristal et le marbre. */
-export function Reflections() {
+export function Reflections({ intensity = 0.32 }: { intensity?: number }) {
   const { gl, scene } = useThree();
   useEffect(() => {
     const pmrem = new THREE.PMREMGenerator(gl);
     const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     scene.environment = env;
-    scene.environmentIntensity = 0.32;
     return () => {
       scene.environment = null;
       env.dispose();
       pmrem.dispose();
     };
   }, [gl, scene]);
+  // L'environnement éclaire aussi la pierre : il suit la lumière du jour quand la salle le demande.
+  useEffect(() => {
+    scene.environmentIntensity = intensity;
+  }, [scene, intensity]);
   return null;
 }
 
@@ -191,7 +199,7 @@ function CameraRig({ slot, lector }: { slot: { x: number; z: number } | null; le
 
 /* ─── Lumière : soir d'hiver ; dernier jour par les baies, feu, lustres, candélabres, chaire ─── */
 
-function Lights({ lowPower }: { lowPower: boolean }) {
+function Lights({ lowPower, daylight: d }: { lowPower: boolean; daylight: Daylight }) {
   const fire = useRef<THREE.PointLight>(null);
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
@@ -199,9 +207,10 @@ function Lights({ lowPower }: { lowPower: boolean }) {
   });
   return (
     <>
-      <ambientLight color="#ffd9b0" intensity={0.09} />
-      <hemisphereLight args={["#e8cfa8", "#1e0f0a", 0.16]} />
-      <directionalLight color="#ffb877" intensity={0.5} position={[8, 4.5, 3]} />
+      {/* jour par les lancettes (doré à l'aube et au soir), lune la nuit ; le feu et les chandelles restent */}
+      <ambientLight color="#ffd9b0" intensity={lerp(0.02, 0.3, d.sun)} />
+      <hemisphereLight args={[mix("#33405e", "#efdcbc", d.sun), "#1e0f0a", lerp(0.03, 0.75, d.sun)]} />
+      <directionalLight color={mix("#8fa6d6", "#fff0d6", d.sun).lerp(new THREE.Color("#ffb070"), d.warm * 0.7)} intensity={lerp(0.25, 3.0, d.sun)} position={[8, 4.5, 3]} />
       <pointLight ref={fire} color="#ff8a3a" position={[0, 0.9, HALL.z1 - 0.9]} distance={11} decay={1.4} />
       <pointLight color="#ffb066" intensity={3.5} position={[PULPIT.x + 0.3, PULPIT.floor + 1.6, PULPIT.z]} distance={4} decay={1.6} />
       {/* lueur sur la façade de la chaire et son escalier */}
@@ -225,7 +234,7 @@ function makeAbbey() {
 }
 const abbey = () => (abbeyMats ??= makeAbbey());
 
-function Hall({ lowPower }: { lowPower: boolean }) {
+function Hall({ lowPower, daylight }: { lowPower: boolean; daylight: Daylight }) {
   const len = HALL.z1 - HALL.z0;
   const midZ = (HALL.z0 + HALL.z1) / 2;
   const tex = useMemo(() => {
@@ -241,7 +250,6 @@ function Hall({ lowPower }: { lowPower: boolean }) {
       wallEnd: limestoneTexture(23, [(HALL.half * 2) / 2.5, (HALL.spring - WAINSCOT) / 2.5]),
       vault: limestoneTexture(29, [(Math.PI * HALL.half) / 2.5, len / 2.5]),
       tympan: limestoneTexture(31, [(HALL.half * 2) / 2.5, HALL.rise / 2.5]),
-      window: windowTexture(),
       shaft: shaftTexture(),
     };
   }, [len]);
@@ -372,10 +380,9 @@ function Hall({ lowPower }: { lowPower: boolean }) {
       {/* hautes lancettes du mur droit, ébrasement de pierre, et leurs rayons */}
       {BAYS.slice(0, -1).map((z) => (
         <group key={z} position={[HALL.half - 0.02, 0, z + 2]} rotation={[0, -Math.PI / 2, 0]}>
-          <mesh position={[0, 2.25, 0]}>
-            <planeGeometry args={[0.9, 1.9]} />
-            <meshBasicMaterial map={tex.window} toneMapped={false} transparent opacity={0.95} />
-          </mesh>
+          <group position={[0, 2.25, 0]}>
+            <DayNightGlass daylight={daylight} w={0.9} h={1.9} />
+          </group>
           {[-1, 1].map((s) => (
             <mesh key={s} position={[s * 0.53, 2.2, 0.08]} material={a.stone}>
               <boxGeometry args={[0.16, 2.0, 0.18]} />
@@ -387,7 +394,7 @@ function Hall({ lowPower }: { lowPower: boolean }) {
           {!lowPower && (
             <mesh position={[0, 1.35, 1.4]} rotation={[-0.8, 0, 0]}>
               <planeGeometry args={[1, 3.6]} />
-              <meshBasicMaterial map={tex.shaft} transparent opacity={0.1} depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
+              <meshBasicMaterial map={tex.shaft} color={shaftTint(daylight)} transparent opacity={lerp(0.06, 0.12, daylight.sun)} depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
             </mesh>
           )}
         </group>

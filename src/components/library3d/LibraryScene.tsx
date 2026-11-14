@@ -4,6 +4,8 @@ import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber"
 import { PerformanceMonitor, Sparkles, useCursor } from "@react-three/drei";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { useParisDaylight, type Daylight } from "@/lib/daylight";
+import { DayNightGlass, lerp, mix, shaftTint } from "./DayNight";
 import { CASE, computeRoom, packShelf, type CaseSlot, type PlacedBook } from "./layout";
 import {
   generatedCoverTexture,
@@ -13,7 +15,6 @@ import {
   rugTexture,
   shaftTexture,
   spineTexture,
-  windowTexture,
   woodTexture,
   type Fonts,
   globeTexture,
@@ -72,6 +73,7 @@ function Room({ shelves, view, lowPower, onView, onIntroDone, entrance, onReady,
   const fonts = useMemo(() => resolveFonts(), []);
   const room = useMemo(() => computeRoom(shelves.length), [shelves.length]);
   const reveal = useRef(entrance ? 0.6 : view.kind === "intro" ? 0 : 1);
+  const daylight = useParisDaylight();
   const ready = useRef(false);
   const intro = useRef({ start: -1, done: view.kind !== "intro" });
   const doorAngle = useRef(view.kind === "intro" ? 0 : 1);
@@ -98,11 +100,11 @@ function Room({ shelves, view, lowPower, onView, onIntroDone, entrance, onReady,
   return (
     <>
       <CameraRig view={view} room={room} entrance={entrance} />
-      <Lights reveal={reveal} lowPower={lowPower} />
+      <Lights reveal={reveal} lowPower={lowPower} daylight={daylight} />
       <group position={[0, 6.2, -6]} scale={0.72}>
         <GrandChandelier drop={(room.height - 6.2) / 0.72} reveal={reveal} lowPower={lowPower} />
       </group>
-      <Architecture room={room} doorAngle={doorAngle} lowPower={lowPower} />
+      <Architecture room={room} doorAngle={doorAngle} lowPower={lowPower} daylight={daylight} />
       <ReadingDesk copyist={copyist ?? null} onBook={onDeskBook} onDone={onCopyistDone} />
       {shelves.map((s, i) => (
         <Bookcase
@@ -185,7 +187,7 @@ function CameraRig({ view, room, entrance }: { view: View; room: ReturnType<type
 
 /* ─── Light ──────────────────────────────────────────────────────────── */
 
-function Lights({ reveal, lowPower }: { reveal: React.RefObject<number>; lowPower: boolean }) {
+function Lights({ reveal, lowPower, daylight: d }: { reveal: React.RefObject<number>; lowPower: boolean; daylight: Daylight }) {
   const amb = useRef<THREE.AmbientLight>(null);
   const hemi = useRef<THREE.HemisphereLight>(null);
   const win = useRef<THREE.DirectionalLight>(null);
@@ -202,9 +204,10 @@ function Lights({ reveal, lowPower }: { reveal: React.RefObject<number>; lowPowe
     const flicker = 1 + Math.sin(t * 7.3) * 0.03 + Math.sin(t * 13.1) * 0.02;
     // Une chandelle vacille davantage qu'un lustre de huit bougies.
     const candle = 1 + Math.sin(t * 9.7) * 0.07 + Math.sin(t * 23.3) * 0.05 + Math.sin(t * 3.1) * 0.04;
-    if (amb.current) amb.current.intensity = 0.55 * r + 0.03;
-    if (hemi.current) hemi.current.intensity = 0.7 * r;
-    if (win.current) win.current.intensity = 1.1 * r;
+    // Le jour entre par les hautes fenêtres ; la nuit, la lune n'éclaire guère et les lustres font le reste.
+    if (amb.current) amb.current.intensity = 0.55 * r * lerp(0.6, 1.1, d.sun) + 0.03;
+    if (hemi.current) hemi.current.intensity = 0.7 * r * lerp(0.5, 1.15, d.sun);
+    if (win.current) win.current.intensity = 1.1 * r * lerp(0.35, 1.5, d.sun);
     if (desk.current) desk.current.intensity = 7 * r * candle;
     lamps.current.forEach((l) => l && (l.intensity = 14 * r * flicker));
   });
@@ -212,8 +215,8 @@ function Lights({ reveal, lowPower }: { reveal: React.RefObject<number>; lowPowe
   return (
     <>
       <ambientLight ref={amb} color="#ffdcb0" />
-      <hemisphereLight ref={hemi} args={["#f3d9a6", "#1a0f0a"]} />
-      <directionalLight ref={win} color="#ffe4b8" position={[-14, 11, 2]} />
+      <hemisphereLight ref={hemi} args={[mix("#3e4766", "#f3d9a6", d.sun), "#1a0f0a"]} />
+      <directionalLight ref={win} color={mix("#8fa6d6", "#ffe4b8", d.sun).lerp(new THREE.Color("#ffad66"), d.warm * 0.6)} position={[-14, 11, 2]} />
       {/* Chandelle du bureau (le bureau est centré en z = 1) */}
       <pointLight ref={desk} color="#ff9e4a" position={[0.78, 1.38, 0.68]} distance={7.5} decay={1.6} />
       {lampPos.map((p, i) => (
@@ -480,10 +483,12 @@ const Architecture = memo(function Architecture({
   room,
   doorAngle,
   lowPower,
+  daylight,
 }: {
   room: ReturnType<typeof computeRoom>;
   doorAngle: React.RefObject<number>;
   lowPower: boolean;
+  daylight: Daylight;
 }) {
   const { front, depth, halfW, height } = room;
   const tex = useMemo(() => {
@@ -492,7 +497,7 @@ const Architecture = memo(function Architecture({
     wall.repeat.set(8, 3);
     const wallSide = panelTexture(9);
     wallSide.repeat.set(depth / 3, 3);
-    return { floor, wall, wallSide, window: windowTexture(), shaft: shaftTexture(), rug: rugTexture(), door: woodTexture("#2b1e16", 31) };
+    return { floor, wall, wallSide, shaft: shaftTexture(), rug: rugTexture(), door: woodTexture("#2b1e16", 31) };
   }, [depth]);
   const midZ = (front + -9.5) / 2;
   const left = useRef<THREE.Group>(null);
@@ -579,14 +584,13 @@ const Architecture = memo(function Architecture({
       {/* gothic windows + light shafts */}
       {windows.map((w, i) => (
         <group key={i} position={[w.x, 0, w.z]} rotation={[0, w.ry, 0]}>
-          <mesh position={[0, 8.4, 0]}>
-            <planeGeometry args={[1.8, 3.6]} />
-            <meshBasicMaterial map={tex.window} toneMapped={false} transparent opacity={0.9} />
-          </mesh>
+          <group position={[0, 8.4, 0]}>
+            <DayNightGlass daylight={daylight} w={1.8} h={3.6} opacity={0.9} />
+          </group>
           {!lowPower && (
             <mesh position={[0, 5.2, 3.4]} rotation={[0.95, 0, 0]}>
               <planeGeometry args={[1.9, 7.4]} />
-              <meshBasicMaterial map={tex.shaft} transparent opacity={0.16} depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
+              <meshBasicMaterial map={tex.shaft} color={shaftTint(daylight)} transparent opacity={lerp(0.08, 0.16, daylight.sun)} depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
             </mesh>
           )}
         </group>

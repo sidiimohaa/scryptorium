@@ -4,9 +4,11 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { PerformanceMonitor, Sparkles, useCursor } from "@react-three/drei";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { Candelabra } from "./LibraryScene";
+import { Candelabra, Candle } from "./LibraryScene";
 import { mats, Reflections } from "./RefectoryScene";
 import { generatedCoverTexture, limestoneTexture, resolveFonts, terracottaTexture, woodTexture, type Fonts } from "./textures";
+import { useParisDaylight, type Daylight } from "@/lib/daylight";
+import { SkyTone, lerp, mix } from "./DayNight";
 
 /**
  * La salle capitulaire : salle claire de neuf travées voûtées d'ogives, portées par quatre colonnes à
@@ -116,13 +118,16 @@ function Chapter({ mode, books, selected, onSelect, lowPower, onReady }: Props) 
       onReady?.();
     }
   });
+  const dl = useParisDaylight();
   const slots = useMemo(() => lecternSlots(mode === "voting" ? books.length : 0), [mode, books.length]);
   const selIndex = selected ? books.findIndex((b) => b.id === selected) : -1;
   return (
     <>
-      <Reflections />
+      <Reflections intensity={lerp(0.1, 0.32, dl.sun)} />
       <CameraRig focus={mode === "voting" && selIndex >= 0 ? slots[selIndex] : null} />
-      <Sun lowPower={lowPower} />
+      <SkyTone daylight={dl} day="#d9e1e4" night="#0d1322" dusk="#e2a679" />
+      <Sun lowPower={lowPower} daylight={dl} />
+      <NightCandles daylight={dl} />
       <Hall />
       <Garden lowPower={lowPower} />
       {mode === "voting" &&
@@ -152,7 +157,7 @@ function Chapter({ mode, books, selected, onSelect, lowPower, onReady }: Props) 
         </group>
       )}
       {/* poussière dorée dans les rais de soleil */}
-      {!lowPower && <Sparkles count={90} scale={[8, 3.6, 8]} position={[0.5, 1.9, CENTER_Z + 1]} size={1.6} speed={0.08} opacity={0.45} color="#fff1d2" noise={0.6} />}
+      {!lowPower && <Sparkles count={90} scale={[8, 3.6, 8]} position={[0.5, 1.9, CENTER_Z + 1]} size={1.6} speed={0.08} opacity={lerp(0.15, 0.45, dl.sun)} color="#fff1d2" noise={0.6} />}
     </>
   );
 }
@@ -193,7 +198,7 @@ function CameraRig({ focus }: { focus: { x: number; z: number; ry: number } | nu
 }
 
 /** Soleil d'après-midi qui entre par les baies du fond et de droite, et lumière renvoyée par la pierre. */
-function Sun({ lowPower }: { lowPower: boolean }) {
+function Sun({ lowPower, daylight: d }: { lowPower: boolean; daylight: Daylight }) {
   const sun = useRef<THREE.DirectionalLight>(null);
   useLayoutEffect(() => {
     const l = sun.current;
@@ -211,12 +216,13 @@ function Sun({ lowPower }: { lowPower: boolean }) {
   }, []);
   return (
     <>
-      <ambientLight color="#fff1dc" intensity={0.15} />
-      <hemisphereLight args={["#e3ecf2", "#b8784a", 0.55]} />
+      <ambientLight color="#fff1dc" intensity={lerp(0.03, 0.15, d.sun)} />
+      <hemisphereLight args={[mix("#2c3856", "#e3ecf2", d.sun), mix("#1a120c", "#b8784a", d.sun), lerp(0.12, 0.55, d.sun)]} />
+      {/* soleil le jour, rasant et doré à l'aube et au crépuscule ; la nuit, la lune projette les grilles */}
       <directionalLight
         ref={sun}
-        color="#fff0d2"
-        intensity={4.2}
+        color={mix("#8fa6d6", "#fff0d2", d.sun).lerp(new THREE.Color("#ffa860"), d.warm * 0.7)}
+        intensity={lerp(0.45, 4.2, d.sun)}
         position={[8, 8.5, 9]}
         castShadow
         shadow-mapSize-width={lowPower ? 1024 : 2048}
@@ -225,7 +231,36 @@ function Sun({ lowPower }: { lowPower: boolean }) {
         shadow-normalBias={0.03}
       />
       {/* lumière chaude renvoyée par le sol ensoleillé */}
-      <pointLight color="#ffd3a0" intensity={4} position={[0.5, 0.6, 0.5]} distance={9} decay={1.4} />
+      <pointLight color="#ffd3a0" intensity={4 * d.sun} position={[0.5, 0.6, 0.5]} distance={9} decay={1.4} />
+    </>
+  );
+}
+
+/**
+ * Deux grands chandeliers de fer de part et d'autre des lutrins : toujours là, ils ne donnent
+ * vraiment leur lumière qu'au crépuscule et la nuit.
+ */
+function NightCandles({ daylight: d }: { daylight: Daylight }) {
+  const iron = useMemo(() => new THREE.MeshStandardMaterial({ color: "#2b2522", metalness: 0.7, roughness: 0.45 }), []);
+  return (
+    <>
+      {[-1, 1].map((s) => (
+        <group key={s} position={[s * 2.1, 0, CENTER_Z + 0.9]}>
+          <mesh position={[0, 0.04, 0]} material={iron}>
+            <cylinderGeometry args={[0.2, 0.24, 0.08, 12]} />
+          </mesh>
+          <mesh position={[0, 0.75, 0]} material={iron}>
+            <cylinderGeometry args={[0.025, 0.035, 1.45, 10]} />
+          </mesh>
+          <mesh position={[0, 1.48, 0]} material={iron}>
+            <cylinderGeometry args={[0.11, 0.06, 0.05, 14]} />
+          </mesh>
+          <group position={[0, 1.5, 0]}>
+            <Candle height={0.26} radius={0.032} seed={s + 3} />
+          </group>
+          <pointLight color="#ffaa5c" intensity={lerp(0.4, 4.5, d.night)} position={[0, 1.9, 0]} distance={6} decay={1.5} />
+        </group>
+      ))}
     </>
   );
 }
