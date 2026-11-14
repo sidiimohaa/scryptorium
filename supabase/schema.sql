@@ -240,3 +240,20 @@ create policy "own bookmarks" on bookmarks for all using (member_id = auth.uid()
 -- ─── Stockage des couvertures ──────────────────────────────────────────────
 insert into storage.buckets (id, name, public) values ('covers', 'covers', true)
 on conflict (id) do nothing;
+
+-- ─── Droits d'accès ────────────────────────────────────────────────────────
+-- Les projets Supabase récents n'accordent plus d'office les droits sur les tables
+-- créées en SQL. Les politiques RLS ci-dessus restent le filtre : `anon` ne lit que
+-- le publié, `authenticated` n'écrit que ce que ses politiques permettent,
+-- `service_role` (serveur Next.js uniquement) contourne la RLS.
+grant usage on schema public to anon, authenticated, service_role;
+grant all on all tables in schema public to service_role;
+grant all on all sequences in schema public to service_role;
+grant select on all tables in schema public to anon;
+grant select, insert, update, delete on all tables in schema public to authenticated;
+grant usage, select on all sequences in schema public to authenticated;
+grant execute on all functions in schema public to anon, authenticated, service_role;
+alter default privileges in schema public grant all on tables to service_role;
+alter default privileges in schema public grant select on tables to anon;
+alter default privileges in schema public grant select, insert, update, delete on tables to authenticated;
+
