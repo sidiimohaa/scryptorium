@@ -14,7 +14,7 @@ export default function AbbeyPage() {
         <p className="eyebrow rise">L&apos;abbaye</p>
         <h1 className="display rise rise-1 mt-4 text-5xl md:text-7xl">Plan de l&apos;abbaye</h1>
         <p className="rise rise-2 mt-5 max-w-2xl font-[family-name:var(--font-serif)] text-xl leading-relaxed text-parchment/85">
-          Chaque salle de l&apos;abbaye a son office. La bibliothèque et le scriptorium sont ouverts ; les autres salles se construisent pierre à pierre.
+          Chaque salle de l&apos;abbaye a son office. La bibliothèque, le scriptorium et le réfectoire sont ouverts ; la salle capitulaire se construit pierre à pierre.
         </p>
         <div className="rise rise-3 mt-12">
           <AbbeyPlan />

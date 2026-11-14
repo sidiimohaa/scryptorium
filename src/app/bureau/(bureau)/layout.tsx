@@ -12,6 +12,7 @@ const NAV = [
   { href: "/bureau/livres/nouveau", label: "Ajouter un livre" },
   { href: "/bureau/rayonnages", label: "Rayonnages" },
   { href: "/bureau/imports", label: "Imports & Drive" },
+  { href: "/bureau/refectoire", label: "Réfectoire" },
   { href: "/bureau/reglages", label: "Réglages" },
 ];
 

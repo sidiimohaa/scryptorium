@@ -25,7 +25,7 @@ export async function readerClient() {
   });
 }
 
-export type Reader = { id: string; displayName: string; role: "admin" | "member"; needsPseudo: boolean };
+export type Reader = { id: string; displayName: string; role: "admin" | "member"; needsPseudo: boolean; banned: boolean };
 
 /** Le lecteur connecté (session vérifiée auprès de Supabase), ou `null`. */
 export async function getReader(): Promise<Reader | null> {
@@ -33,12 +33,13 @@ export async function getReader(): Promise<Reader | null> {
   if (!supabase) return null;
   const { data } = await supabase.auth.getUser();
   if (!data.user) return null;
-  const { data: profile } = await supabase.from("profiles").select("display_name, role, preferences").eq("id", data.user.id).maybeSingle();
-  if (!profile) return { id: data.user.id, displayName: "", role: "member", needsPseudo: true };
+  const { data: profile } = await supabase.from("profiles").select("display_name, role, preferences, banned").eq("id", data.user.id).maybeSingle();
+  if (!profile) return { id: data.user.id, displayName: "", role: "member", needsPseudo: true, banned: false };
   return {
     id: data.user.id,
     displayName: profile.display_name,
     role: profile.role === "admin" ? "admin" : "member",
     needsPseudo: !(profile.preferences as { pseudoChosen?: boolean } | null)?.pseudoChosen,
+    banned: Boolean(profile.banned),
   };
 }

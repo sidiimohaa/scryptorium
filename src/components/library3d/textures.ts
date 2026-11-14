@@ -915,3 +915,91 @@ export function printedPageTexture(seed = 3) {
   g.fillRect(118, 362, 20, 3);
   return finish(c);
 }
+
+/** Pierre calcaire claire en assises (murs et voûtes du réfectoire). */
+export function limestoneTexture(seed = 13, repeat: [number, number] = [1, 1]) {
+  const [c, g] = canvas(512, 512);
+  const r = rng(seed);
+  g.fillStyle = "#9c9282";
+  g.fillRect(0, 0, 512, 512);
+  const rowH = 56;
+  for (let row = 0; row < Math.ceil(512 / rowH); row++) {
+    let x = row % 2 ? -50 : 0;
+    while (x < 512) {
+      const w = 80 + r() * 80;
+      const tone = 196 + r() * 26;
+      g.fillStyle = `rgb(${tone}, ${tone - 8}, ${tone - 22})`;
+      g.fillRect(x + 2, row * rowH + 2, w - 4, rowH - 4);
+      for (let k = 0; k < 10; k++) {
+        g.fillStyle = `rgba(${r() < 0.6 ? "120,105,85" : "250,245,235"},${0.05 + r() * 0.08})`;
+        g.beginPath();
+        g.arc(x + r() * w, row * rowH + r() * rowH, 3 + r() * 12, 0, Math.PI * 2);
+        g.fill();
+      }
+      x += w;
+    }
+  }
+  const img = g.getImageData(0, 0, 512, 512);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (r() - 0.5) * 14;
+    img.data[i] += n;
+    img.data[i + 1] += n;
+    img.data[i + 2] += n;
+  }
+  g.putImageData(img, 0, 0);
+  return finish(c, repeat);
+}
+
+/** Tomettes de terre cuite, rouge-orangé, joints clairs (sol du réfectoire). */
+export function terracottaTexture(seed = 17, repeat: [number, number] = [1, 1]) {
+  const [c, g] = canvas(512, 512);
+  const r = rng(seed);
+  g.fillStyle = "#6b5a48";
+  g.fillRect(0, 0, 512, 512);
+  const s = 64;
+  for (let y = 0; y < 512; y += s) {
+    for (let x = 0; x < 512; x += s) {
+      const t = r();
+      g.fillStyle = `rgb(${150 + t * 40}, ${68 + t * 22}, ${42 + t * 14})`;
+      g.fillRect(x + 2, y + 2, s - 4, s - 4);
+      for (let k = 0; k < 6; k++) {
+        g.fillStyle = `rgba(${r() < 0.5 ? "70,30,18" : "220,150,110"},${0.06 + r() * 0.08})`;
+        g.beginPath();
+        g.arc(x + r() * s, y + r() * s, 3 + r() * 10, 0, Math.PI * 2);
+        g.fill();
+      }
+    }
+  }
+  return finish(c, repeat);
+}
+
+/** Feuillet de place : titre du sujet manuscrit, nombre de messages en rubrique. */
+export function placeCardTexture(title: string, count: number, fonts: Fonts) {
+  const [c, g] = canvas(384, 192);
+  g.fillStyle = "#efe2c2";
+  g.fillRect(0, 0, 384, 192);
+  g.strokeStyle = "#9c2128";
+  g.lineWidth = 3;
+  g.strokeRect(10, 10, 364, 172);
+  g.fillStyle = "#2b1a10";
+  g.textAlign = "center";
+  g.font = `600 34px ${fonts.display}`;
+  const words = title.split(/\s+/);
+  const lines: string[] = [];
+  let cur = "";
+  for (const w of words) {
+    const t = cur ? `${cur} ${w}` : w;
+    if (g.measureText(t).width > 330 && cur) {
+      lines.push(cur);
+      cur = w;
+    } else cur = t;
+  }
+  if (cur) lines.push(cur);
+  const shown = lines.slice(0, 2);
+  if (lines.length > 2) shown[1] = `${shown[1].replace(/\s+\S*$/, "")}…`;
+  shown.forEach((l, i) => g.fillText(l, 192, 78 + i * 40 - (shown.length - 1) * 14));
+  g.fillStyle = "#9c2128";
+  g.font = `italic 400 22px ${fonts.serif}`;
+  g.fillText(`${count} message${count > 1 ? "s" : ""}`, 192, 166);
+  return finish(c);
+}

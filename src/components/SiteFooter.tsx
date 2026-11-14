@@ -20,6 +20,7 @@ export function SiteFooter() {
           <Link className="link-gilt w-fit" href="/coups-de-coeur">Coups de cœur</Link>
           <Link className="link-gilt w-fit" href="/cabinet">Cabinet des lectures</Link>
           <Link className="link-gilt w-fit" href="/archives">Les Archives</Link>
+          <Link className="link-gilt w-fit" href="/refectoire">Le Réfectoire</Link>
           <Link className="link-gilt w-fit" href="/club">Le Club</Link>
         </nav>
         <div className="flex flex-col items-start gap-3 text-sm text-muted md:items-end">

@@ -271,3 +271,101 @@ begin
 end $$;
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users for each row execute function handle_new_reader();
+
+-- ─── Réfectoire : forum des lecteurs ───────────────────────────────────────
+-- Lecture ouverte à tous ; écriture réservée aux membres ayant choisi leur pseudo et non bannis.
+-- Modération après coup depuis le Bureau (clé service_role) : masquer, bannir, traiter les signalements.
+alter table profiles add column if not exists banned boolean not null default false;
+-- Un membre modifie son profil sans pouvoir changer son rôle ni lever un bannissement.
+drop policy if exists "profiles update self" on profiles;
+create policy "profiles update self" on profiles for update using (id = auth.uid()) with check (
+  id = auth.uid()
+  and role = (select p.role from profiles p where p.id = auth.uid())
+  and banned = (select p.banned from profiles p where p.id = auth.uid())
+);
+
+create table if not exists refectory_topics (
+  id           uuid primary key default gen_random_uuid(),
+  title        text not null check (char_length(title) between 3 and 120),
+  author_id    uuid not null references profiles(id) on delete cascade,
+  book_id      text references books(id) on delete set null,
+  hidden       boolean not null default false,
+  post_count   int not null default 0,
+  created_at   timestamptz not null default now(),
+  last_post_at timestamptz not null default now()
+);
+create table if not exists refectory_posts (
+  id           uuid primary key default gen_random_uuid(),
+  topic_id     uuid not null references refectory_topics(id) on delete cascade,
+  author_id    uuid not null references profiles(id) on delete cascade,
+  content      text not null check (char_length(content) between 1 and 4000),
+  has_spoilers boolean not null default false,
+  hidden       boolean not null default false,
+  created_at   timestamptz not null default now()
+);
+create table if not exists refectory_reports (
+  id          uuid primary key default gen_random_uuid(),
+  post_id     uuid not null references refectory_posts(id) on delete cascade,
+  reporter_id uuid not null references profiles(id) on delete cascade,
+  reason      text not null default '' check (char_length(reason) <= 500),
+  resolved    boolean not null default false,
+  created_at  timestamptz not null default now(),
+  unique (post_id, reporter_id)
+);
+create index if not exists refectory_topics_last_idx on refectory_topics (last_post_at desc);
+create index if not exists refectory_posts_topic_idx on refectory_posts (topic_id, created_at);
+
+alter table refectory_topics  enable row level security;
+alter table refectory_posts   enable row level security;
+alter table refectory_reports enable row level security;
+
+create or replace function is_active_member() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from profiles
+    where id = auth.uid() and not banned and coalesce((preferences->>'pseudoChosen')::boolean, false)
+  );
+$$;
+
+drop policy if exists "read topics" on refectory_topics;
+create policy "read topics" on refectory_topics for select using (not hidden or is_admin());
+drop policy if exists "members open topics" on refectory_topics;
+create policy "members open topics" on refectory_topics for insert
+  with check (author_id = auth.uid() and is_active_member() and not hidden and post_count = 0);
+
+drop policy if exists "read posts" on refectory_posts;
+create policy "read posts" on refectory_posts for select using (
+  (not hidden and exists (select 1 from refectory_topics t where t.id = topic_id and not t.hidden)) or is_admin()
+);
+drop policy if exists "members post" on refectory_posts;
+create policy "members post" on refectory_posts for insert with check (
+  author_id = auth.uid() and is_active_member() and not hidden
+  and exists (select 1 from refectory_topics t where t.id = topic_id and not t.hidden)
+);
+drop policy if exists "authors delete own posts" on refectory_posts;
+create policy "authors delete own posts" on refectory_posts for delete using (author_id = auth.uid());
+
+-- Signalements : un membre signale ; seul le Bureau (service_role) les lit.
+drop policy if exists "members report" on refectory_reports;
+create policy "members report" on refectory_reports for insert with check (reporter_id = auth.uid() and is_active_member());
+
+-- Compteur et date du dernier message tenus par la base.
+create or replace function refectory_bump() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  update refectory_topics set last_post_at = new.created_at, post_count = post_count + 1 where id = new.topic_id;
+  return new;
+end $$;
+drop trigger if exists refectory_post_added on refectory_posts;
+create trigger refectory_post_added after insert on refectory_posts for each row execute function refectory_bump();
+
+-- Messages en direct (Supabase Realtime, filtré par la RLS de chaque abonné).
+do $$ begin
+  alter publication supabase_realtime add table refectory_posts;
+exception when duplicate_object then null;
+end $$;
+
+grant select on refectory_topics, refectory_posts to anon;
+grant select, insert, update, delete on refectory_topics, refectory_posts, refectory_reports to authenticated;
+grant all on refectory_topics, refectory_posts, refectory_reports to service_role;
+grant execute on function is_active_member() to anon, authenticated, service_role;
