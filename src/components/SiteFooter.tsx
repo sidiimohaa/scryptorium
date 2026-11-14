@@ -14,6 +14,7 @@ export function SiteFooter() {
           </div>
         </div>
         <nav aria-label="Pied de page" className="grid grid-cols-2 gap-2 text-sm text-parchment/70">
+          <Link className="link-gilt w-fit" href="/abbaye">Plan de l&apos;abbaye</Link>
           <Link className="link-gilt w-fit" href="/bibliotheque">La Salle</Link>
           <Link className="link-gilt w-fit" href="/catalogue">Catalogue</Link>
           <Link className="link-gilt w-fit" href="/coups-de-coeur">Coups de cœur</Link>

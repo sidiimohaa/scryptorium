@@ -4,6 +4,7 @@ import { SearchButton } from "./SearchDialog";
 import { MobileNav } from "./MobileNav";
 
 export const NAV = [
+  { href: "/abbaye", label: "L'Abbaye" },
   { href: "/bibliotheque", label: "La Salle" },
   { href: "/catalogue", label: "Catalogue" },
   { href: "/coups-de-coeur", label: "Coups de cœur" },
