@@ -6,6 +6,7 @@ import { RoseWindow } from "./RoseWindow";
 import { StainedGlass } from "./StainedGlass";
 import { HomePreloader } from "./HomePreloader";
 import { PassageVeil } from "./PassageVeil";
+import { clearPassage } from "@/lib/passage";
 
 type Phase = "dark" | "glow" | "inscription" | "ready" | "opening";
 
@@ -45,6 +46,8 @@ export function IntroHero({ fromGate = false }: { fromGate?: boolean }) {
   // Retour par la porte : le voile « Porta » se lève, et l'adresse perd son paramètre (un rechargement montre l'accueil normal).
   useEffect(() => {
     if (!fromGate) return;
+    // Le nom « Porta » est affiché ici : le passage laissé par le plan ne doit pas resurgir dans la salle suivante.
+    clearPassage();
     const url = new URL(window.location.href);
     url.searchParams.delete("porte");
     window.history.replaceState(window.history.state, "", url.pathname + url.search);
@@ -70,7 +73,10 @@ export function IntroHero({ fromGate = false }: { fromGate?: boolean }) {
 
   const enter = () => {
     if (phase === "opening") return;
-    if (reducedMotion()) return router.push("/bibliotheque?intro=0");
+    if (reducedMotion()) {
+      clearPassage();
+      return router.push("/bibliotheque?intro=0");
+    }
     // La « caméra » avance vers le centre exact de l'embrasure.
     const cam = camera.current?.getBoundingClientRect();
     const d = door.current?.getBoundingClientRect();
@@ -78,6 +84,7 @@ export function IntroHero({ fromGate = false }: { fromGate?: boolean }) {
       camera.current.style.transformOrigin = `${d.left + d.width / 2 - cam.left}px ${d.top + d.height * 0.55 - cam.top}px`;
     }
     setPhase("opening");
+    clearPassage();
     setTimeout(() => router.push("/bibliotheque?entree=porte"), 1900);
   };
 

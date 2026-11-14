@@ -81,7 +81,8 @@ export function LibraryExperience({
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state after hydration
     setSupport(hasWebGL() ? "ok" : "none");
     // Arrivée par le plan de l'abbaye : le voile au nom latin reste jusqu'au premier rendu de la salle.
-    const from = arrival();
+    // Entrée par les portes de l'accueil : seul le voile de lumière « Bibliotheca » s'affiche.
+    const from = entrance ? null : arrival();
     if (from) {
       setPassage(from);
       setVeil(true);

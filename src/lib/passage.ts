@@ -13,6 +13,13 @@ export function leaveFor(p: Passage) {
   } catch {}
 }
 
+/** Oublie tout passage en attente (la salle d'arrivée en a déjà affiché le nom, ou on entre autrement). */
+export function clearPassage() {
+  try {
+    sessionStorage.removeItem(KEY);
+  } catch {}
+}
+
 /**
  * Lit le passage en cours (s'il date de moins de 20 s) et l'efface peu après : pas tout de suite,
  * car React (mode strict, en développement) exécute deux fois les effets de montage.
