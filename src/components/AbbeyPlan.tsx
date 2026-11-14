@@ -172,8 +172,9 @@ export function AbbeyPlan({ current: here }: { current?: string } = {}) {
           ))}
         </ul>
       </aside>
-      {/* À la racine du document : un parent animé (transform) enfermerait sinon le voile « fixed ». */}
-      {leaving && createPortal(<PassageVeil visible fadeIn passage={leaving} />, document.body)}
+      {/* À la racine du document : un parent animé (transform) enfermerait sinon le voile « fixed ».
+          Le départ s'assombrit sans texte : le nom latin ne s'inscrit qu'une fois, à l'arrivée. */}
+      {leaving && createPortal(<PassageVeil visible fadeIn passage={null} />, document.body)}
     </div>
   );
 }

@@ -48,7 +48,7 @@ export function IntroHero({ fromGate = false }: { fromGate?: boolean }) {
     const url = new URL(window.location.href);
     url.searchParams.delete("porte");
     window.history.replaceState(window.history.state, "", url.pathname + url.search);
-    const t = setTimeout(() => setGateVeil(false), 350);
+    const t = setTimeout(() => setGateVeil(false), 900);
     return () => clearTimeout(t);
   }, [fromGate]);
 
