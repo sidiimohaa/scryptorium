@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { leaveFor, type Passage } from "@/lib/passage";
+import { PassageVeil } from "./PassageVeil";
 
 /**
  * Plan de l'abbaye, à la manière des plans de monastère médiévaux (plan de Saint-Gall) :
@@ -19,7 +22,8 @@ type Room = {
   href?: string;
   description: string;
   box: { x: number; y: number; w: number; h: number };
-  lines: string[];
+  /** Sous-titre français sur le plan. */
+  fr: string;
 };
 
 const ROOMS: Room[] = [
@@ -28,10 +32,10 @@ const ROOMS: Room[] = [
     name: "La Bibliothèque",
     latin: "Bibliotheca",
     status: "open",
-    href: "/bibliotheque",
+    href: "/bibliotheque?intro=0",
     description: "La salle des rayonnages : on y parcourt les livres, on les sort des étagères, et le copiste y recommande une lecture.",
     box: { x: 760, y: 92, w: 140, h: 68 },
-    lines: ["BIBLIOTHÈQUE"],
+    fr: "la bibliothèque",
   },
   {
     id: "scriptorium",
@@ -41,7 +45,7 @@ const ROOMS: Room[] = [
     href: "/scriptorium",
     description: "La lecture en cours du bibliothécaire, posée sur son pupitre : où il en est, et les notes qu'il écrit au fil des pages.",
     box: { x: 760, y: 160, w: 140, h: 68 },
-    lines: ["SCRIPTORIUM"],
+    fr: "l'atelier des copistes",
   },
   {
     id: "capitulaire",
@@ -50,7 +54,7 @@ const ROOMS: Room[] = [
     status: "soon",
     description: "Le club de lecture : le livre du mois, les dates de séance, les propositions et les votes des membres.",
     box: { x: 580, y: 242, w: 100, h: 148 },
-    lines: ["SALLE", "CAPITULAIRE"],
+    fr: "la salle capitulaire",
   },
   {
     id: "refectoire",
@@ -60,7 +64,7 @@ const ROOMS: Room[] = [
     href: "/refectoire",
     description: "Le salon des lecteurs : chacun y parle de ses lectures, avec un compte, sous l'œil du bibliothécaire.",
     box: { x: 340, y: 446, w: 230, h: 78 },
-    lines: ["RÉFECTOIRE"],
+    fr: "le réfectoire",
   },
 ];
 
@@ -72,14 +76,28 @@ const VELLUM = "#f2e5c6";
 
 const pct = (v: number, of: number) => `${(v / of) * 100}%`;
 
-export function AbbeyPlan() {
+export function AbbeyPlan({ current: here }: { current?: string } = {}) {
+  const router = useRouter();
   const [active, setActive] = useState<string | null>(null);
+  const [leaving, setLeaving] = useState<Passage | null>(null);
   const current = ROOMS.find((r) => r.id === active) ?? null;
+
+  /** Entrer dans une salle : fondu au nom latin, puis changement de page (clic simple seulement). */
+  const enter = (r: Room) => (e: React.MouseEvent) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0 || !r.href) return;
+    e.preventDefault();
+    if (r.id === here || leaving) return;
+    const p = { latin: r.latin, name: r.name };
+    const reduced = document.documentElement.dataset.motion === "reduced" || matchMedia("(prefers-reduced-motion: reduce)").matches;
+    leaveFor(p);
+    setLeaving(p);
+    setTimeout(() => router.push(r.href!), reduced ? 0 : 800);
+  };
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
       <div className="relative w-full shadow-[0_30px_80px_-30px_rgb(0_0_0/0.9)]" style={{ aspectRatio: "1000 / 720" }}>
-        <PlanDrawing active={active} />
+        <PlanDrawing active={active} here={here} />
         {ROOMS.map((r) => {
           const style = {
             left: pct(r.box.x, 1000),
@@ -96,7 +114,7 @@ export function AbbeyPlan() {
             "aria-label": `${r.name}${r.status === "soon" ? " (en construction)" : ""}`,
           };
           return r.status === "open" && r.href ? (
-            <Link key={r.id} href={r.href} {...common} />
+            <Link key={r.id} href={r.href} {...common} onClick={enter(r)} aria-current={r.id === here ? "location" : undefined} />
           ) : (
             <button key={r.id} type="button" {...common} onClick={() => setActive(r.id)} />
           );
@@ -109,8 +127,10 @@ export function AbbeyPlan() {
             <p className="eyebrow">{current.latin}</p>
             <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl text-cream">{current.name}</h2>
             <p className="mt-4 font-[family-name:var(--font-serif)] text-lg leading-relaxed text-parchment/85">{current.description}</p>
-            {current.status === "open" && current.href ? (
-              <Link href={current.href} className="btn mt-6">Entrer</Link>
+            {current.id === here ? (
+              <p className="mt-6 text-xs uppercase tracking-[0.2em] text-gold">Vous êtes ici</p>
+            ) : current.status === "open" && current.href ? (
+              <Link href={current.href} onClick={enter(current)} className="btn mt-6">Entrer</Link>
             ) : (
               <p className="mt-6 text-xs uppercase tracking-[0.2em] text-muted">En construction · pas encore ouverte</p>
             )}
@@ -127,9 +147,9 @@ export function AbbeyPlan() {
           {ROOMS.map((r) => (
             <li key={r.id}>
               {r.status === "open" && r.href ? (
-                <Link href={r.href} onMouseEnter={() => setActive(r.id)} onFocus={() => setActive(r.id)} className="link-gilt flex items-baseline justify-between gap-3 text-parchment">
+                <Link href={r.href} onClick={enter(r)} onMouseEnter={() => setActive(r.id)} onFocus={() => setActive(r.id)} aria-current={r.id === here ? "location" : undefined} className="link-gilt flex items-baseline justify-between gap-3 text-parchment">
                   <span className="font-[family-name:var(--font-display)] text-xl">{r.name}</span>
-                  <span className="text-[0.65rem] uppercase tracking-[0.2em] text-gold">Ouverte</span>
+                  <span className="text-[0.65rem] uppercase tracking-[0.2em] text-gold">{r.id === here ? "Vous êtes ici" : "Ouverte"}</span>
                 </Link>
               ) : (
                 <button type="button" onClick={() => setActive(r.id)} onMouseEnter={() => setActive(r.id)} onFocus={() => setActive(r.id)} className="flex w-full items-baseline justify-between gap-3 text-left text-parchment/70">
@@ -141,6 +161,7 @@ export function AbbeyPlan() {
           ))}
         </ul>
       </aside>
+      <PassageVeil visible={leaving !== null} passage={leaving} />
     </div>
   );
 }
@@ -158,25 +179,31 @@ function Label({ x, y, children, size = 11, color = INK, spacing = 2.2, anchor =
   );
 }
 
-function Decor({ x, y, w, h, label, vertical = false }: { x: number; y: number; w: number; h: number; label?: string; vertical?: boolean }) {
+function Decor({ x, y, w, h, label, sub, vertical = false }: { x: number; y: number; w: number; h: number; label?: string; sub?: string; vertical?: boolean }) {
+  const width = Math.max(label?.length ?? 0, (sub?.length ?? 0) * 0.62) * 9.2;
   return (
     <g>
       <rect x={x} y={y} width={w} height={h} fill="url(#hatch)" stroke={INK} strokeWidth={1.4} />
       {label && (
         <g transform={vertical ? `rotate(-90 ${x + w / 2} ${y + h / 2})` : undefined}>
-          <rect x={x + w / 2 - label.length * 4.6} y={y + h / 2 - 9} width={label.length * 9.2} height={14} fill={VELLUM} opacity={0.92} />
-          <Label x={x + w / 2} y={y + h / 2 + 2} size={9.5} color={SEPIA} spacing={2}>{label}</Label>
+          <rect x={x + w / 2 - width / 2} y={y + h / 2 - 11} width={width} height={sub ? 25 : 14} fill={VELLUM} opacity={0.94} />
+          <Label x={x + w / 2} y={y + h / 2} size={9.5} color={SEPIA} spacing={2}>{label}</Label>
+          {sub && <Label x={x + w / 2} y={y + h / 2 + 10} size={7.5} color={INK} spacing={0.3} italic>{sub}</Label>}
         </g>
       )}
     </g>
   );
 }
 
-function RoomShape({ room, active }: { room: Room; active: boolean }) {
+/** Inscription latine à la manière lapidaire (U gravé en V). */
+const inscription = (latin: string) => latin.toUpperCase().replace(/U/g, "V");
+
+function RoomShape({ room, active, here }: { room: Room; active: boolean; here: boolean }) {
   const { x, y, w, h } = room.box;
   const open = room.status === "open";
-  const lineH = 13;
-  const top = y + h / 2 - ((room.lines.length - 1) * lineH) / 2 + 4;
+  const cx = x + w / 2;
+  const cy = y + h / 2;
+  const tall = h > w;
   return (
     <g style={{ transition: "opacity 300ms" }}>
       <rect x={x} y={y} width={w} height={h} fill={active ? "url(#goldwash)" : open ? "#f6e6bb" : VELLUM} stroke={INK} strokeWidth={1.8}
@@ -184,17 +211,16 @@ function RoomShape({ room, active }: { room: Room; active: boolean }) {
       <rect x={x + 5} y={y + 5} width={w - 10} height={h - 10} fill="none" stroke={open || active ? GOLD : SEPIA} strokeWidth={open || active ? 1.4 : 0.7}
         strokeDasharray={open || active ? undefined : "3 3"} />
       {active && <rect x={x - 3} y={y - 3} width={w + 6} height={h + 6} fill="none" stroke={GOLD} strokeWidth={2} filter="url(#glow)" />}
-      {room.lines.map((l, i) => (
-        <Label key={l} x={x + w / 2} y={top + i * lineH} size={room.lines.length > 1 ? 9.5 : 11.5} spacing={room.lines.length > 1 ? 1.2 : 2.2} color={open ? RUBRIC : INK}>{l}</Label>
-      ))}
-      <Label x={x + w / 2} y={top + room.lines.length * lineH + 1} size={8} color={SEPIA} spacing={1.2} italic>
-        {open ? "ouverte" : "à venir"}
+      <Label x={cx} y={cy - (tall ? 6 : 4)} size={tall ? 10.5 : 11.5} spacing={tall ? 1.4 : 2.2} color={open ? RUBRIC : INK}>{inscription(room.latin)}</Label>
+      <Label x={cx} y={cy + (tall ? 9 : 10)} size={tall ? 8 : 8.5} color={INK} spacing={0.4} italic>{room.fr}</Label>
+      <Label x={cx} y={cy + (tall ? 22 : 21)} size={7} color={SEPIA} spacing={1.2} italic>
+        {here ? "— vous êtes ici —" : open ? "ouverte" : "à venir"}
       </Label>
     </g>
   );
 }
 
-function PlanDrawing({ active }: { active: string | null }) {
+function PlanDrawing({ active, here }: { active: string | null; here?: string }) {
   const naveColumns = Array.from({ length: 9 }, (_, i) => 290 + i * 36);
   const cloisterCols: [number, number][] = [];
   for (let i = 0; i <= 10; i++) {
@@ -254,7 +280,7 @@ function PlanDrawing({ active }: { active: string | null }) {
       <rect x="50" y="88" width="900" height="500" rx="18" fill="none" stroke={INK} strokeWidth="1.2" strokeDasharray="10 4 2 4" />
 
       {/* porte et chemin vers l'église */}
-      <Decor x={110} y={140} w={56} h={40} label="PORTA" />
+      <Decor x={104} y={136} w={68} h={48} label="PORTA" sub="la porterie" />
       <path d="M166 160 L232 160" stroke={SEPIA} strokeWidth="1.2" strokeDasharray="4 4" />
 
       {/* église : nef, tours, transept, chœur, abside */}
@@ -272,7 +298,8 @@ function PlanDrawing({ active }: { active: string | null }) {
           </g>
         ))}
         <path d="M715 154 v12 M709 160 h12" stroke={RUBRIC} strokeWidth="2" />
-        <Label x={430} y={164} size={12} spacing={5}>ECCLESIA</Label>
+        <Label x={430} y={160} size={12} spacing={5}>ECCLESIA</Label>
+        <Label x={430} y={173} size={8.5} spacing={0.5} italic>l&apos;église abbatiale</Label>
         {/* passage vers la bibliothèque */}
         <rect x="744" y="150" width="16" height="20" fill="url(#hatch)" stroke={INK} strokeWidth="1.2" />
       </g>
@@ -285,13 +312,15 @@ function PlanDrawing({ active }: { active: string | null }) {
         {cloisterCols.map(([cx, cy], i) => <circle key={i} cx={cx} cy={cy} r="2.2" fill={INK} />)}
         <circle cx="455" cy="320" r="11" fill="#b9c7c4" stroke={INK} strokeWidth="1.4" />
         <circle cx="455" cy="320" r="5" fill="#6f8a8a" />
-        <Label x={455} y={300} size={9.5} color={SEPIA} spacing={2.5}>CLAVSTRVM</Label>
+        <rect x={402} y={284} width={106} height={26} fill="#e6dcb0" opacity={0.85} />
+        <Label x={455} y={296} size={9.5} color={SEPIA} spacing={2.5}>CLAVSTRVM</Label>
+        <Label x={455} y={306} size={7.5} color={INK} spacing={0.3} italic>le cloître</Label>
       </g>
 
       {/* ailes de service */}
-      <Decor x={250} y={215} w={80} h={310} label="CELLARIVM" vertical />
-      <Decor x={580} y={392} w={100} h={44} label="PARLATORIVM" />
-      <Decor x={580} y={446} w={76} h={78} label="CVLINA" vertical />
+      <Decor x={250} y={215} w={80} h={310} label="CELLARIVM" sub="le cellier" vertical />
+      <Decor x={580} y={392} w={100} h={44} label="PARLATORIVM" sub="le parloir" />
+      <Decor x={580} y={446} w={76} h={78} label="CVLINA" sub="la cuisine" vertical />
 
       {/* jardin des simples */}
       <g>
@@ -306,7 +335,8 @@ function PlanDrawing({ active }: { active: string | null }) {
             </g>
           );
         })}
-        <Label x={825} y={524} size={10} color={SEPIA} spacing={2.5}>HORTVS SIMPLICIVM</Label>
+        <Label x={825} y={522} size={10} color={SEPIA} spacing={2.5}>HORTVS SIMPLICIVM</Label>
+        <Label x={825} y={534} size={8} color={INK} spacing={0.3} italic>le jardin des simples</Label>
       </g>
 
       {/* verger */}
@@ -317,11 +347,12 @@ function PlanDrawing({ active }: { active: string | null }) {
             <path d={`M${cx - 5} ${cy} h10 M${cx} ${cy - 5} v10`} stroke={INK} strokeWidth="0.8" />
           </g>
         ))}
-        <Label x={145} y={560} size={10} color={SEPIA} spacing={2.5}>POMARIVM</Label>
+        <Label x={145} y={558} size={10} color={SEPIA} spacing={2.5}>POMARIVM</Label>
+        <Label x={145} y={570} size={8} color={INK} spacing={0.3} italic>le verger</Label>
       </g>
 
       {/* salles du site */}
-      {ROOMS.map((r) => <RoomShape key={r.id} room={r} active={active === r.id} />)}
+      {ROOMS.map((r) => <RoomShape key={r.id} room={r} active={active === r.id} here={here === r.id} />)}
 
       {/* rose des vents */}
       <g transform="translate(880 652)">

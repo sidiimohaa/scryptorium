@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { loadThread } from "@/app/refectoire/actions";
 import { browserClient } from "@/lib/supabase/browser";
+import { arrival, type Passage } from "@/lib/passage";
 import { Emblem } from "../Emblem";
+import { PassageVeil } from "../PassageVeil";
+import { PlanOverlay } from "../PlanOverlay";
 import { LiveTopic, type LivePost } from "../refectory/LiveTopic";
 import { NewTopicForm } from "../refectory/NewTopicForm";
 import { SLOTS, type RefectoryPlace } from "./RefectoryScene";
@@ -59,6 +62,7 @@ export function RefectoryExperience({ topics, reader, books, latest, initialThre
   const [lowPower, setLowPower] = useState(false);
   const [fontsReady, setFontsReady] = useState(false);
   const [veil, setVeil] = useState(true);
+  const [passage, setPassage] = useState<Passage | null>(null);
   const [selected, setSelected] = useState<string | null>(initialThread?.topic.id ?? null);
   const [thread, setThread] = useState<Thread | null>(initialThread);
   const [lectorView, setLectorView] = useState(false);
@@ -74,6 +78,7 @@ export function RefectoryExperience({ topics, reader, books, latest, initialThre
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state after hydration
     setSupport(hasWebGL() ? "ok" : "none");
+    setPassage(arrival());
     let stored: string | null = null;
     try {
       stored = localStorage.getItem("scr-perf");
@@ -169,7 +174,7 @@ export function RefectoryExperience({ topics, reader, books, latest, initialThre
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgb(12_8_6/0.55)_100%)]" />
       {/* voile sombre en haut à gauche : le titre reste lisible sur la pierre claire */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgb(17_16_15/0.82),rgb(17_16_15/0.35)_38%,transparent_62%)]" />
-      <div className={`pointer-events-none absolute inset-0 bg-[#1a1511] transition-opacity duration-[1400ms] ${veil ? "opacity-100" : "opacity-0"}`} />
+      <PassageVeil visible={veil} passage={passage} tone="#140e0b" />
 
       {/* accès sans 3D */}
       <nav aria-label="Sujets du réfectoire" className="sr-only">
@@ -183,7 +188,7 @@ export function RefectoryExperience({ topics, reader, books, latest, initialThre
         </Link>
         <div className="pointer-events-auto flex gap-2">
           {(selected || lectorView) && <button type="button" onClick={backToHall} className="btn btn-ghost px-3 py-2 text-[0.68rem] tracking-[0.18em]">Toute la salle</button>}
-          <Link href="/abbaye" className="btn btn-ghost px-3 py-2 text-[0.68rem] tracking-[0.18em]">Plan de l&apos;abbaye</Link>
+          <PlanOverlay current="refectoire" />
         </div>
       </div>
 

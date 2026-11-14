@@ -2,7 +2,10 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { arrival, type Passage } from "@/lib/passage";
 import { Emblem } from "../Emblem";
+import { PassageVeil } from "../PassageVeil";
+import { PlanOverlay } from "../PlanOverlay";
 import type { ScriptoriumBook } from "./ScriptoriumScene";
 import type { CopyistNote } from "./types";
 
@@ -63,6 +66,7 @@ export function ScriptoriumExperience({ entries }: { entries: ScriptoriumEntry[]
   const [lowPower, setLowPower] = useState(false);
   const [fontsReady, setFontsReady] = useState(false);
   const [veil, setVeil] = useState(true);
+  const [passage, setPassage] = useState<Passage | null>(null);
   const [index, setIndex] = useState(0);
   const [copyist, setCopyist] = useState<CopyistNote | null>(null);
   const [writing, setWriting] = useState(false);
@@ -79,6 +83,7 @@ export function ScriptoriumExperience({ entries }: { entries: ScriptoriumEntry[]
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state after hydration
     setSupport(hasWebGL() ? "ok" : "none");
+    setPassage(arrival());
     let stored: string | null = null;
     try {
       stored = localStorage.getItem("scr-perf");
@@ -114,7 +119,7 @@ export function ScriptoriumExperience({ entries }: { entries: ScriptoriumEntry[]
           />
         )}
       </div>
-      <div className={`pointer-events-none absolute inset-0 bg-[#0b0908] transition-opacity duration-[1400ms] ${veil ? "opacity-100" : "opacity-0"}`} />
+      <PassageVeil visible={veil} passage={passage} />
 
       {/* barre du haut */}
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-4 p-4 md:p-6">
@@ -122,7 +127,7 @@ export function ScriptoriumExperience({ entries }: { entries: ScriptoriumEntry[]
           <Emblem className="h-9 w-9" />
           <span className="hidden font-[family-name:var(--font-display)] tracking-[0.34em] text-cream sm:inline">SCRYPTORIUM</span>
         </Link>
-        <Link href="/abbaye" className="btn btn-ghost pointer-events-auto px-3 py-2 text-[0.68rem] tracking-[0.18em]">Plan de l&apos;abbaye</Link>
+        <PlanOverlay current="scriptorium" />
       </div>
 
       <div className="pointer-events-none absolute left-4 top-20 md:left-8 md:top-24">

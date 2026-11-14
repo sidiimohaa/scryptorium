@@ -2,7 +2,10 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { arrival, type Passage } from "@/lib/passage";
 import { Emblem } from "../Emblem";
+import { PassageVeil } from "../PassageVeil";
+import { PlanOverlay } from "../PlanOverlay";
 import type { CopyistNote, SceneShelf, View } from "./types";
 
 const LibraryScene = dynamic(() => import("./LibraryScene"), { ssr: false, loading: () => null });
@@ -49,6 +52,7 @@ export function LibraryExperience({
   const [fontsReady, setFontsReady] = useState(false);
   const [view, setView] = useState<View>({ kind: "intro" });
   const [veil, setVeil] = useState(entrance);
+  const [passage, setPassage] = useState<Passage | null>(null);
   const [copyist, setCopyist] = useState<CopyistNote | null>(null);
   const [copyistDone, setCopyistDone] = useState(false);
   const [copyistSlug, setCopyistSlug] = useState<string | null>(null);
@@ -76,6 +80,12 @@ export function LibraryExperience({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state after hydration
     setSupport(hasWebGL() ? "ok" : "none");
+    // Arrivée par le plan de l'abbaye : le voile au nom latin reste jusqu'au premier rendu de la salle.
+    const from = arrival();
+    if (from) {
+      setPassage(from);
+      setVeil(true);
+    }
     let stored: string | null = null;
     try {
       stored = localStorage.getItem("scr-perf");
@@ -218,6 +228,7 @@ export function LibraryExperience({
           <span className="hidden font-[family-name:var(--font-display)] tracking-[0.34em] text-cream sm:inline">SCRYPTORIUM</span>
         </Link>
         <div className="pointer-events-auto flex max-w-[75vw] flex-wrap justify-end gap-0.5 rounded bg-ink/40 backdrop-blur-sm">
+          <PlanOverlay current="bibliotheque" />
           <button type="button" onClick={() => window.dispatchEvent(new Event("scr:search"))} className="btn btn-ghost px-2.5 py-1.5 text-[0.62rem] tracking-[0.18em] md:px-3 md:py-2 md:text-[0.72rem]">Rechercher</button>
           <Link href="/catalogue" className="btn btn-ghost px-2.5 py-1.5 text-[0.62rem] tracking-[0.18em] md:px-3 md:py-2 md:text-[0.72rem]">Catalogue</Link>
           <button type="button" onClick={togglePerf} aria-pressed={lowPower} aria-label="Mode faible performance" className="btn btn-ghost px-2.5 py-1.5 text-[0.62rem] tracking-[0.18em] md:px-3 md:py-2 md:text-[0.72rem]" title="Réduit la résolution, la poussière et les rayons lumineux">
@@ -321,6 +332,8 @@ export function LibraryExperience({
           style={{ opacity: veil ? 1 : 0 }}
         />
       )}
+
+      {passage && <PassageVeil visible={veil} passage={passage} />}
 
       {(!fontsReady || support === "checking") && (
         <div className="absolute inset-0 flex items-center justify-center">
