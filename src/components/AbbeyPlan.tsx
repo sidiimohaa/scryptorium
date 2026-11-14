@@ -44,7 +44,7 @@ const ROOMS: Room[] = [
     latin: "Bibliotheca",
     status: "open",
     href: "/bibliotheque?intro=0",
-    description: "La salle des rayonnages : on y parcourt les livres, on les sort des étagères, et le copiste y recommande une lecture.",
+    description: "La salle des rayonnages : on y parcourt les livres, on les sort des étagères, et le Maestre y recommande une lecture.",
     box: { x: 760, y: 92, w: 140, h: 68 },
     fr: "la bibliothèque",
   },

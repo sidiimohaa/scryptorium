@@ -32,7 +32,7 @@ export type CopyistNote = {
   author: string;
   year: number | null;
   phrase: string;
-  /** En-tête du feuillet (par défaut « Le copiste vous recommande »). */
+  /** En-tête du feuillet (par défaut « Le Maestre vous recommande »). */
   heading?: string;
   /** Met la phrase entre guillemets (par défaut oui ; non pour un simple relevé). */
   quoted?: boolean;

@@ -265,8 +265,8 @@ export function LibraryExperience({
         </button>
       )}
       {copyist && copyistDone && copyistSlug && (
-        <aside aria-label="Recommandation du copiste" className="panel rise absolute inset-x-3 bottom-24 z-20 p-6 md:inset-x-auto md:bottom-auto md:right-8 md:top-1/2 md:w-[360px] md:-translate-y-1/2 md:p-7">
-          <p className="eyebrow">Le copiste vous recommande</p>
+        <aside aria-label="Recommandation du Maestre" className="panel rise absolute inset-x-3 bottom-24 z-20 p-6 md:inset-x-auto md:bottom-auto md:right-8 md:top-1/2 md:w-[360px] md:-translate-y-1/2 md:p-7">
+          <p className="eyebrow">Le Maestre vous recommande</p>
           <h2 className="display mt-3 text-3xl">{copyist.title}</h2>
           <p className="mt-1 font-[family-name:var(--font-serif)] italic text-gold-bright">
             {copyist.author}{copyist.year ? `, ${copyist.year}` : ""}
@@ -276,7 +276,7 @@ export function LibraryExperience({
           <div className="mt-5 flex flex-wrap gap-2">
             <Link href={`/livres/${copyistSlug}`} className="btn px-4 py-2.5">Ouvrir la fiche</Link>
             <button type="button" onClick={() => summonCopyist()} className="btn btn-ghost px-4 py-2.5">Une autre</button>
-            <button type="button" onClick={back} className="btn btn-ghost px-4 py-2.5">Remercier le copiste</button>
+            <button type="button" onClick={back} className="btn btn-ghost px-4 py-2.5">Remercier le Maestre</button>
           </div>
         </aside>
       )}

@@ -7,7 +7,7 @@ import { NOTE_KIND_LABELS } from "@/lib/types";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Le Scriptorium",
-  description: "La lecture en cours du bibliothécaire, son avancement et ses notes, recopiées par le copiste.",
+  description: "La lecture en cours du bibliothécaire, son avancement et ses notes, recopiées par le Maestre.",
 };
 
 export default async function ScriptoriumPage() {

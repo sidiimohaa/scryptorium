@@ -196,7 +196,7 @@ export function RefectoryExperience({ topics, reader, books, latest, initialThre
         <p className="eyebrow">L&apos;abbaye · Refectorium</p>
         <h1 className="display mt-2 text-4xl md:text-6xl">Le Réfectoire</h1>
         {!selected && !lectorView && (
-          <p className="mt-2 max-w-sm font-[family-name:var(--font-serif)] text-parchment/80">Chaque couvert est un sujet : approchez-vous d&apos;une place, ou écoutez le lecteur en chaire.</p>
+          <p className="mt-2 max-w-sm font-[family-name:var(--font-serif)] text-parchment/80">Chaque couvert est un sujet : approchez-vous d&apos;une place, ou écoutez le Maestre en chaire.</p>
         )}
       </div>
 
@@ -219,7 +219,7 @@ export function RefectoryExperience({ topics, reader, books, latest, initialThre
           )
         ) : lectorView ? (
           <>
-            <p className="eyebrow">Le lecteur en chaire</p>
+            <p className="eyebrow">Le Maestre en chaire</p>
             {latest ? (
               <>
                 <p className="mt-3 font-[family-name:var(--font-serif)] text-lg leading-relaxed text-parchment/90">« {clip(latest.content, 400)} »</p>

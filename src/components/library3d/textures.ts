@@ -855,7 +855,7 @@ export function writingSheet(
   };
   const red = "#9c2128";
   const brown = "#2b1a10";
-  add(note.heading ?? "Le copiste vous recommande", `600 22px ${fonts.display}`, red, 70, true);
+  add(note.heading ?? "Le Maestre vous recommande", `600 22px ${fonts.display}`, red, 70, true);
   let y = 132;
   for (const t of wrap(note.title, `600 40px ${fonts.display}`, W - 88)) {
     add(t, `600 40px ${fonts.display}`, brown, y, true);
