@@ -53,6 +53,8 @@ export const bookSchema = z.object({
   rating: z.number().min(0).max(10).nullable().default(null),
   readStartedAt: z.string().nullable().default(null),
   readFinishedAt: z.string().nullable().default(null),
+  /** Page reached in the current reading (Scriptorium). `null` = not entered (never guessed). */
+  currentPage: z.number().int().min(0).max(20000).nullable().default(null),
   visibility: z.enum(VISIBILITIES).default("draft"),
   driveRefs: z.array(z.string().url()).max(20).default([]),
   sources: z.record(z.string(), z.string()).default({}),

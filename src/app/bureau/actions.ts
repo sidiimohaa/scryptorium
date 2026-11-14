@@ -139,6 +139,7 @@ export async function saveBook(_: ActionState, fd: FormData): Promise<ActionStat
       rating: rating !== null && Number.isFinite(rating) ? rating : null,
       readStartedAt: optStr(fd, "readStartedAt"),
       readFinishedAt: optStr(fd, "readFinishedAt"),
+      currentPage: optInt(fd, "currentPage"),
       visibility: (VISIBILITIES as readonly string[]).includes(visibility) ? visibility : "draft",
       driveRefs: list(fd, "driveRefs").filter((u) => /^https:\/\/(docs|drive)\.google\.com\//.test(u)),
       sources: {

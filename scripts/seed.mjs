@@ -105,6 +105,7 @@ const book = {
   rating: null,
   readStartedAt: null,
   readFinishedAt: null,
+  currentPage: null,
   visibility: "published",
   driveRefs: [],
   sources: {

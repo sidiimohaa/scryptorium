@@ -731,7 +731,7 @@ export type WritingSheet = {
  * Le texte final est composé hors écran, puis révélé ligne à ligne, de gauche à droite.
  */
 export function writingSheet(
-  note: { title: string; author: string; year: number | null; phrase: string },
+  note: { title: string; author: string; year: number | null; phrase: string; heading?: string; quoted?: boolean },
   fonts: Fonts,
 ): WritingSheet {
   const W = 480;
@@ -783,7 +783,7 @@ export function writingSheet(
   };
   const red = "#9c2128";
   const brown = "#2b1a10";
-  add("Le copiste vous recommande", `600 22px ${fonts.display}`, red, 70, true);
+  add(note.heading ?? "Le copiste vous recommande", `600 22px ${fonts.display}`, red, 70, true);
   let y = 132;
   for (const t of wrap(note.title, `600 40px ${fonts.display}`, W - 88)) {
     add(t, `600 40px ${fonts.display}`, brown, y, true);
@@ -791,7 +791,7 @@ export function writingSheet(
   }
   add(`${note.author}${note.year ? `, ${note.year}` : ""}`, `italic 400 22px ${fonts.serif}`, red, y + 4, true);
   y += 58;
-  for (const t of wrap(`« ${note.phrase} »`, `italic 400 21px ${fonts.serif}`, W - 88).slice(0, 9)) {
+  for (const t of wrap(note.quoted === false ? note.phrase : `« ${note.phrase} »`, `italic 400 21px ${fonts.serif}`, W - 88).slice(0, 9)) {
     add(t, `italic 400 21px ${fonts.serif}`, brown, y);
     y += 30;
   }
@@ -826,4 +826,92 @@ export function writingSheet(
   };
   render(0);
   return { texture, render, width: W, height: H };
+}
+
+/** Pierre de taille en assises réglées (murs du scriptorium) : blocs, joints, nuances et éclats. */
+export function stoneTexture(seed = 5, repeat: [number, number] = [1, 1]) {
+  const [c, g] = canvas(512, 512);
+  const r = rng(seed);
+  g.fillStyle = "#4a4038";
+  g.fillRect(0, 0, 512, 512);
+  const rowH = 64;
+  for (let row = 0; row < 512 / rowH; row++) {
+    let x = row % 2 ? -60 : 0;
+    while (x < 512) {
+      const w = 90 + r() * 70;
+      const tone = 58 + r() * 26;
+      g.fillStyle = `rgb(${tone + 14}, ${tone + 6}, ${tone - 4})`;
+      g.fillRect(x + 3, row * rowH + 3, w - 6, rowH - 6);
+      // taches et usure
+      for (let k = 0; k < 14; k++) {
+        g.fillStyle = `rgba(${r() < 0.5 ? "20,16,12" : "150,135,115"},${0.05 + r() * 0.08})`;
+        g.beginPath();
+        g.arc(x + r() * w, row * rowH + r() * rowH, 4 + r() * 14, 0, Math.PI * 2);
+        g.fill();
+      }
+      x += w;
+    }
+  }
+  const img = g.getImageData(0, 0, 512, 512);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (r() - 0.5) * 22;
+    img.data[i] += n;
+    img.data[i + 1] += n;
+    img.data[i + 2] += n;
+  }
+  g.putImageData(img, 0, 0);
+  return finish(c, repeat);
+}
+
+/** Dallage de pierre usé, joints sombres (sol du scriptorium). */
+export function flagstoneTexture(seed = 11, repeat: [number, number] = [1, 1]) {
+  const [c, g] = canvas(512, 512);
+  const r = rng(seed);
+  g.fillStyle = "#211a15";
+  g.fillRect(0, 0, 512, 512);
+  const cell = 128;
+  for (let y = 0; y < 512; y += cell) {
+    for (let x = 0; x < 512; x += cell) {
+      const tone = 62 + r() * 30;
+      g.fillStyle = `rgb(${tone + 10}, ${tone + 2}, ${tone - 8})`;
+      const j = () => (r() - 0.5) * 6;
+      g.beginPath();
+      g.moveTo(x + 4 + j(), y + 4 + j());
+      g.lineTo(x + cell - 4 + j(), y + 4 + j());
+      g.lineTo(x + cell - 4 + j(), y + cell - 4 + j());
+      g.lineTo(x + 4 + j(), y + cell - 4 + j());
+      g.closePath();
+      g.fill();
+      for (let k = 0; k < 10; k++) {
+        g.fillStyle = `rgba(${r() < 0.5 ? "15,12,10" : "160,140,115"},${0.05 + r() * 0.07})`;
+        g.beginPath();
+        g.arc(x + r() * cell, y + r() * cell, 5 + r() * 18, 0, Math.PI * 2);
+        g.fill();
+      }
+    }
+  }
+  const img = g.getImageData(0, 0, 512, 512);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (r() - 0.5) * 18;
+    img.data[i] += n;
+    img.data[i + 1] += n;
+    img.data[i + 2] += n;
+  }
+  g.putImageData(img, 0, 0);
+  return finish(c, repeat);
+}
+
+/** Page imprimée : lignes de texte grisées, folio en pied (livre posé sur le lutrin). */
+export function printedPageTexture(seed = 3) {
+  const [c, g] = canvas(256, 384);
+  const r = rng(seed);
+  g.fillStyle = "#efe4cb";
+  g.fillRect(0, 0, 256, 384);
+  g.fillStyle = "rgba(60,45,30,0.55)";
+  for (let y = 36; y < 350; y += 11) {
+    const w = y > 330 || r() < 0.08 ? 60 + r() * 90 : 196 - r() * 10;
+    g.fillRect(30, y, w, 3);
+  }
+  g.fillRect(118, 362, 20, 3);
+  return finish(c);
 }

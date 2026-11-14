@@ -23,7 +23,7 @@ type Candidate = {
 const SOURCE_LABEL = { openlibrary: "Open Library", googlebooks: "Google Books", wikidata: "Wikidata", drive: "Mon carnet (Drive)", manual: "Saisie", scryptorium: "Rédaction SCRYPTORIUM" } as const;
 
 type Values = Record<
-  "title" | "author" | "originalTitle" | "authorNationality" | "originalLanguage" | "edition" | "publisher" | "year" | "pages" | "isbn" | "coverUrl" | "color" | "genres" | "themes" | "summary" | "spoilerAnalysis" | "editorial" | "status" | "rating" | "readStartedAt" | "readFinishedAt" | "visibility" | "driveRefs" | "slug",
+  "title" | "author" | "originalTitle" | "authorNationality" | "originalLanguage" | "edition" | "publisher" | "year" | "pages" | "isbn" | "coverUrl" | "color" | "genres" | "themes" | "summary" | "spoilerAnalysis" | "editorial" | "status" | "rating" | "readStartedAt" | "readFinishedAt" | "currentPage" | "visibility" | "driveRefs" | "slug",
   string
 >;
 
@@ -50,6 +50,7 @@ function initial(book: Book | null, scale: 5 | 10): Values {
     rating: book?.rating != null ? String(scale === 5 ? book.rating / 2 : book.rating) : "",
     readStartedAt: book?.readStartedAt ?? "",
     readFinishedAt: book?.readFinishedAt ?? "",
+    currentPage: book?.currentPage?.toString() ?? "",
     visibility: book?.visibility ?? "draft",
     driveRefs: book?.driveRefs.join("\n") ?? "",
     slug: book?.slug ?? "",
@@ -208,7 +209,7 @@ export function BookForm({ book, categories, ratingScale }: { book: Book | null;
 
       <section className="panel space-y-6 p-6 md:p-8">
         <h2 className="display text-3xl">Ma lecture</h2>
-        <div className="grid gap-5 md:grid-cols-4">
+        <div className="grid gap-5 md:grid-cols-3 xl:grid-cols-5">
           <label className="block">
             <span className="label">Statut</span>
             <select name="status" value={v.status} onChange={set("status")} className="field">
@@ -219,6 +220,7 @@ export function BookForm({ book, categories, ratingScale }: { book: Book | null;
           {field("rating", `Ma note (sur ${ratingScale})`, { inputMode: "decimal", pattern: "[0-9]+([.,][0-9])?", placeholder: "laisser vide si non noté" })}
           {field("readStartedAt", "Commencé le", { type: "date" })}
           {field("readFinishedAt", "Terminé le", { type: "date" })}
+          {field("currentPage", "Page actuelle (Scriptorium)", { inputMode: "numeric", pattern: "[0-9]{1,5}", placeholder: "pendant la lecture" })}
         </div>
       </section>
 

@@ -227,7 +227,7 @@ function Lights({ reveal, lowPower }: { reveal: React.RefObject<number>; lowPowe
 }
 
 /** Flamme de bougie : cœur clair, flamme orangée, halo additif ; vacille et ondule. */
-function Flame({ seed = 0, scale = 1 }: { seed?: number; scale?: number }) {
+export function Flame({ seed = 0, scale = 1 }: { seed?: number; scale?: number }) {
   const ref = useRef<THREE.Group>(null);
   useFrame(({ clock }) => {
     const g = ref.current;
@@ -256,7 +256,7 @@ function Flame({ seed = 0, scale = 1 }: { seed?: number; scale?: number }) {
 }
 
 /** Bougie de cire : corps, coulure, mèche et flamme. */
-function Candle({ height = 0.18, radius = 0.03, seed = 0 }: { height?: number; radius?: number; seed?: number }) {
+export function Candle({ height = 0.18, radius = 0.03, seed = 0 }: { height?: number; radius?: number; seed?: number }) {
   return (
     <group>
       <mesh position={[0, height / 2, 0]}>
@@ -709,7 +709,7 @@ function Drawer({ x, z, w, face }: { x: number; z: number; w: number; face: 1 | 
 }
 
 /** Encrier de cristal hexagonal, couvercle de laiton ouvert, plume noire dans son porte-plume. */
-function Inkwell() {
+export function Inkwell() {
   const feather = useMemo(() => {
     const sh = new THREE.Shape();
     sh.moveTo(0, 0);
@@ -934,7 +934,7 @@ function placeSegment(mesh: THREE.Object3D | null, from: THREE.Vector3, to: THRE
  * sur un feuillet posé sur un pupitre incliné, devant lui.
  * Coordonnées locales du bureau ; le moine regarde vers −z.
  */
-function Copyist({ note, top, onDone }: { note: CopyistNote | null; top: number; onDone?: () => void }) {
+export function Copyist({ note, top, onDone }: { note: CopyistNote | null; top: number; onDone?: () => void }) {
   const fonts = useMemo(() => resolveFonts(), []);
   const [current, setCurrent] = useState<CopyistNote | null>(note);
   const root = useRef<THREE.Group>(null);

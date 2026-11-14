@@ -170,6 +170,7 @@ export async function applySummaryImport(record: ImportRecord): Promise<SummaryI
         rating,
         readStartedAt: null,
         readFinishedAt: null,
+        currentPage: null,
         visibility: s.unfinished ? "draft" : "published",
         driveRefs,
         sources,

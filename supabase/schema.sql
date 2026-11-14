@@ -49,6 +49,7 @@ create table if not exists books (
   rating             numeric(4,2) check (rating is null or (rating >= 0 and rating <= 10)),
   read_started_at    date,
   read_finished_at   date,
+  current_page       int check (current_page is null or current_page >= 0),
   visibility         text not null default 'draft' check (visibility in ('draft','published','archived')),
   drive_refs         text[] not null default '{}',
   sources            jsonb not null default '{}',
@@ -57,6 +58,7 @@ create table if not exists books (
 );
 -- Migration idempotente pour les bases créées avant l'ajout de la colonne.
 alter table books add column if not exists summary_spoilers boolean not null default false;
+alter table books add column if not exists current_page int check (current_page is null or current_page >= 0);
 create index if not exists books_visibility_idx on books (visibility);
 create index if not exists books_author_idx on books (author);
 
