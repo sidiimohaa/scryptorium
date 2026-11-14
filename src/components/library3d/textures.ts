@@ -227,6 +227,78 @@ export function windowTexture() {
   return finish(c);
 }
 
+/** Lancette de nuit : verre bleu nuit en losanges sertis de plomb, lueur de lune en haut. */
+export function moonWindowTexture(seed = 19) {
+  const [c, g] = canvas(256, 512);
+  const r = rng(seed);
+  g.fillStyle = "#000";
+  g.fillRect(0, 0, 256, 512);
+  g.save();
+  g.beginPath();
+  g.moveTo(20, 512);
+  g.lineTo(20, 190);
+  g.quadraticCurveTo(22, 40, 128, 8);
+  g.quadraticCurveTo(234, 40, 236, 190);
+  g.lineTo(236, 512);
+  g.closePath();
+  g.clip();
+  const grad = g.createLinearGradient(0, 0, 0, 512);
+  grad.addColorStop(0, "#5d76a8");
+  grad.addColorStop(0.45, "#2c3d63");
+  grad.addColorStop(1, "#141d33");
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 256, 512);
+  const moon = g.createRadialGradient(170, 110, 4, 170, 110, 120);
+  moon.addColorStop(0, "rgba(235,240,255,0.85)");
+  moon.addColorStop(0.25, "rgba(170,190,230,0.35)");
+  moon.addColorStop(1, "rgba(120,140,190,0)");
+  g.fillStyle = moon;
+  g.fillRect(0, 0, 256, 512);
+  // quelques losanges plus clairs ou plus sombres, comme un verre soufflé inégal
+  const q = 32;
+  for (let y = -q; y < 512 + q; y += q) {
+    for (let x = -q; x < 256 + q; x += q) {
+      const v = r();
+      if (v < 0.25 || v > 0.85) {
+        g.fillStyle = v < 0.25 ? "rgba(10,14,28,0.35)" : "rgba(200,215,245,0.18)";
+        g.beginPath();
+        g.moveTo(x, y - q / 2);
+        g.lineTo(x + q / 2, y);
+        g.lineTo(x, y + q / 2);
+        g.lineTo(x - q / 2, y);
+        g.closePath();
+        g.fill();
+      }
+    }
+  }
+  // résille de plomb en losanges
+  g.strokeStyle = "#0b0d14";
+  g.lineWidth = 3;
+  for (let k = -512; k < 768; k += q) {
+    g.beginPath();
+    g.moveTo(k, 0);
+    g.lineTo(k + 512, 512);
+    g.stroke();
+    g.beginPath();
+    g.moveTo(k, 512);
+    g.lineTo(k + 512, 0);
+    g.stroke();
+  }
+  g.lineWidth = 7;
+  g.beginPath();
+  g.moveTo(128, 40);
+  g.lineTo(128, 512);
+  g.stroke();
+  for (const y of [230, 380]) {
+    g.beginPath();
+    g.moveTo(0, y);
+    g.lineTo(256, y);
+    g.stroke();
+  }
+  g.restore();
+  return finish(c);
+}
+
 /** Soft vertical gradient for volumetric light shafts. */
 export function shaftTexture() {
   const [c, g] = canvas(64, 256);

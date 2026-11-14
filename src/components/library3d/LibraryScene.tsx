@@ -284,7 +284,7 @@ const IRON = { color: "#2b2522", metalness: 0.75, roughness: 0.45 } as const;
  * Lustre médiéval : couronne de fer forgé à huit bougies, suspendue par trois chaînes
  * réunies en une seule jusqu'au plafond (`drop` = distance au plafond).
  */
-function Chandelier({ drop, seed = 0 }: { drop: number; seed?: number }) {
+export function Chandelier({ drop, seed = 0 }: { drop: number; seed?: number }) {
   const R = 0.62;
   const hub = 1.15;
   const chains = useMemo(
