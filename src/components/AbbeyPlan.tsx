@@ -91,6 +91,17 @@ const ROOMS: Room[] = [
     fr: "le chartrier",
     compact: true,
   },
+  {
+    id: "tresor",
+    name: "Le Trésor",
+    latin: "Thesaurus",
+    status: "open",
+    href: "/tresor",
+    description: "Le trésor de l'abbaye, contre l'église : les coups de cœur du bibliothécaire, exposés sous verre avec un mot pour chacun.",
+    box: { x: 478, y: 90, w: 120, h: 34 },
+    fr: "le trésor",
+    compact: true,
+  },
 ];
 
 const INK = "#3a2416";
@@ -263,7 +274,7 @@ function PlanDrawing({ active, here }: { active: string | null; here?: string })
   for (let r = 0; r < 5; r++) for (let c = 0; c < 3; c++) trees.push([100 + c * 45 + (r % 2) * 20, 310 + r * 48]);
 
   return (
-    <svg viewBox="0 0 1000 720" className="absolute inset-0 h-full w-full" role="img" aria-label="Plan de l'abbaye de SCRYPTORIUM : église, cloître, bibliothèque, scriptorium, salle capitulaire, réfectoire, chartrier, cellier, cuisine, jardin des simples et verger">
+    <svg viewBox="0 0 1000 720" className="absolute inset-0 h-full w-full" role="img" aria-label="Plan de l'abbaye de SCRYPTORIUM : église, cloître, bibliothèque, scriptorium, salle capitulaire, réfectoire, chartrier, trésor, cellier, cuisine, jardin des simples et verger">
       <defs>
         <radialGradient id="vellum" cx="50%" cy="45%" r="75%">
           <stop offset="0" stopColor="#f1e3c0" />
