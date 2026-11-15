@@ -9,7 +9,7 @@ export const NAV = [
   { href: "/bibliotheque", label: "La Salle" },
   { href: "/catalogue", label: "Catalogue" },
   { href: "/coups-de-coeur", label: "Coups de cœur" },
-  { href: "/cabinet", label: "Cabinet des lectures" },
+  { href: "/chartrier", label: "Cabinet des lectures" },
   { href: "/capitulaire", label: "Le Club" },
 ];
 

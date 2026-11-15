@@ -18,7 +18,7 @@ export function SiteFooter() {
           <Link className="link-gilt w-fit" href="/bibliotheque">La Salle</Link>
           <Link className="link-gilt w-fit" href="/catalogue">Catalogue</Link>
           <Link className="link-gilt w-fit" href="/coups-de-coeur">Coups de cœur</Link>
-          <Link className="link-gilt w-fit" href="/cabinet">Cabinet des lectures</Link>
+          <Link className="link-gilt w-fit" href="/chartrier">Cabinet des lectures</Link>
           <Link className="link-gilt w-fit" href="/archives">Les Archives</Link>
           <Link className="link-gilt w-fit" href="/refectoire">Le Réfectoire</Link>
           <Link className="link-gilt w-fit" href="/capitulaire">Le Club</Link>

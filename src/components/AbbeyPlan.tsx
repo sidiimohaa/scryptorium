@@ -25,6 +25,8 @@ type Room = {
   box: { x: number; y: number; w: number; h: number };
   /** Sous-titre français sur le plan. */
   fr: string;
+  /** Bâtiment bas et étroit : inscription resserrée. */
+  compact?: boolean;
 };
 
 const ROOMS: Room[] = [
@@ -77,6 +79,17 @@ const ROOMS: Room[] = [
     description: "Le salon des lecteurs : chacun y parle de ses lectures, avec un compte, sous l'œil du bibliothécaire.",
     box: { x: 340, y: 446, w: 230, h: 78 },
     fr: "le réfectoire",
+  },
+  {
+    id: "chartrier",
+    name: "Le Chartrier",
+    latin: "Chartarium",
+    status: "open",
+    href: "/chartrier",
+    description: "La salle des registres : le cabinet des lectures du bibliothécaire, ses annales chiffrées, ses rayonnages et la chronologie de ses lectures.",
+    box: { x: 580, y: 392, w: 100, h: 44 },
+    fr: "le chartrier",
+    compact: true,
   },
 ];
 
@@ -218,6 +231,10 @@ function RoomShape({ room, active, here }: { room: Room; active: boolean; here: 
   const cx = x + w / 2;
   const cy = y + h / 2;
   const tall = h > w;
+  const compact = room.compact ?? false;
+  const latinY = cy - (compact ? 7 : tall ? 6 : 4);
+  const frY = cy + (compact ? 5 : tall ? 9 : 10);
+  const stateY = cy + (compact ? 15 : tall ? 22 : 21);
   return (
     <g style={{ transition: "opacity 300ms" }}>
       <rect x={x} y={y} width={w} height={h} fill={active ? "url(#goldwash)" : open ? "#f6e6bb" : VELLUM} stroke={INK} strokeWidth={1.8}
@@ -225,9 +242,9 @@ function RoomShape({ room, active, here }: { room: Room; active: boolean; here: 
       <rect x={x + 5} y={y + 5} width={w - 10} height={h - 10} fill="none" stroke={open || active ? GOLD : SEPIA} strokeWidth={open || active ? 1.4 : 0.7}
         strokeDasharray={open || active ? undefined : "3 3"} />
       {active && <rect x={x - 3} y={y - 3} width={w + 6} height={h + 6} fill="none" stroke={GOLD} strokeWidth={2} filter="url(#glow)" />}
-      <Label x={cx} y={cy - (tall ? 6 : 4)} size={tall ? 10.5 : 11.5} spacing={tall ? 1.4 : 2.2} color={open ? RUBRIC : INK}>{inscription(room.latin)}</Label>
-      <Label x={cx} y={cy + (tall ? 9 : 10)} size={tall ? 8 : 8.5} color={INK} spacing={0.4} italic>{room.fr}</Label>
-      <Label x={cx} y={cy + (tall ? 22 : 21)} size={7} color={SEPIA} spacing={1.2} italic>
+      <Label x={cx} y={latinY} size={compact ? 9.5 : tall ? 10.5 : 11.5} spacing={compact ? 1 : tall ? 1.4 : 2.2} color={open ? RUBRIC : INK}>{inscription(room.latin)}</Label>
+      <Label x={cx} y={frY} size={compact ? 7.5 : tall ? 8 : 8.5} color={INK} spacing={0.4} italic>{room.fr}</Label>
+      <Label x={cx} y={stateY} size={compact ? 6.5 : 7} color={SEPIA} spacing={1.2} italic>
         {here ? "— vous êtes ici —" : open ? "ouverte" : "à venir"}
       </Label>
     </g>
@@ -246,7 +263,7 @@ function PlanDrawing({ active, here }: { active: string | null; here?: string })
   for (let r = 0; r < 5; r++) for (let c = 0; c < 3; c++) trees.push([100 + c * 45 + (r % 2) * 20, 310 + r * 48]);
 
   return (
-    <svg viewBox="0 0 1000 720" className="absolute inset-0 h-full w-full" role="img" aria-label="Plan de l'abbaye de SCRYPTORIUM : église, cloître, bibliothèque, scriptorium, salle capitulaire, réfectoire, cellier, cuisine, jardin des simples et verger">
+    <svg viewBox="0 0 1000 720" className="absolute inset-0 h-full w-full" role="img" aria-label="Plan de l'abbaye de SCRYPTORIUM : église, cloître, bibliothèque, scriptorium, salle capitulaire, réfectoire, chartrier, cellier, cuisine, jardin des simples et verger">
       <defs>
         <radialGradient id="vellum" cx="50%" cy="45%" r="75%">
           <stop offset="0" stopColor="#f1e3c0" />
@@ -332,7 +349,6 @@ function PlanDrawing({ active, here }: { active: string | null; here?: string })
 
       {/* ailes de service */}
       <Decor x={250} y={215} w={80} h={310} label="CELLARIVM" sub="le cellier" vertical />
-      <Decor x={580} y={392} w={100} h={44} label="PARLATORIVM" sub="le parloir" />
       <Decor x={580} y={446} w={76} h={78} label="CVLINA" sub="la cuisine" vertical />
 
       {/* jardin des simples */}
