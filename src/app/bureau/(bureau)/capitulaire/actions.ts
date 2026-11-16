@@ -41,6 +41,45 @@ export async function openRound(_p: ClubFormState, fd: FormData): Promise<ClubFo
   return { ok: true, message: "Scrutin ouvert." };
 }
 
+/**
+ * Choix direct du livre du mois, sans vote : un livre déjà présent dans la bibliothèque devient la
+ * lecture en cours. La règle « hors bibliothèque » ne vaut que pour les livres proposés au vote.
+ */
+export async function chooseBook(_p: ClubFormState, fd: FormData): Promise<ClubFormState> {
+  const s = await db();
+  const label = str(fd, "label", 80);
+  if (label.length < 3) return { ok: false, message: "Donnez un intitulé (ex. « Lecture de décembre 2026 »)." };
+  const book = (await getRepo().listBooks()).find((b) => b.id === str(fd, "bookId", 64));
+  if (!book) return { ok: false, message: "Choisissez un livre de la bibliothèque." };
+  const { data: round, error } = await s
+    .from("club_rounds")
+    .insert({ label, status: "reading", closed_at: new Date().toISOString() })
+    .select("id")
+    .single();
+  if (error || !round) return { ok: false, message: error?.code === "23505" ? "Une lecture ou un scrutin est déjà en cours : archivez-le d'abord." : "La lecture n'a pas pu être ouverte." };
+  const cover = book.coverUrl && (/^https:\/\//.test(book.coverUrl) || book.coverUrl.startsWith("/")) ? book.coverUrl : null;
+  const { data: cand, error: cErr } = await s
+    .from("club_candidates")
+    .insert({
+      round_id: round.id,
+      title: book.title.slice(0, 300),
+      author: book.author.slice(0, 200),
+      year: book.year,
+      cover_url: cover,
+      // le résumé du bibliothécaire, s'il ne dévoile pas l'intrigue
+      blurb: book.summarySpoilers ? "" : book.summary.replace(/[#>*_]/g, "").replace(/\s+/g, " ").trim().slice(0, 600),
+    })
+    .select("id")
+    .single();
+  if (cErr || !cand) {
+    await s.from("club_rounds").delete().eq("id", round.id);
+    return { ok: false, message: "La lecture n'a pas pu être ouverte." };
+  }
+  await s.from("club_rounds").update({ winner_id: cand.id }).eq("id", round.id);
+  done();
+  return { ok: true, message: `« ${book.title} » est la lecture du mois.` };
+}
+
 export async function addCandidate(_p: ClubFormState, fd: FormData): Promise<ClubFormState> {
   const s = await db();
   const roundId = str(fd, "roundId", 36);

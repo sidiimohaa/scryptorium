@@ -1,6 +1,6 @@
 "use client";
 import { useActionState, useRef, useState } from "react";
-import { addCandidate, addSession, openRound, type ClubFormState } from "@/app/bureau/(bureau)/capitulaire/actions";
+import { addCandidate, addSession, chooseBook, openRound, type ClubFormState } from "@/app/bureau/(bureau)/capitulaire/actions";
 
 function Status({ state }: { state: ClubFormState }) {
   if (!state) return null;
@@ -14,6 +14,24 @@ export function OpenRoundForm() {
       <label className="block"><span className="label">Intitulé</span><input name="label" required minLength={3} maxLength={80} className="field" placeholder="Lecture de décembre 2026" /></label>
       <label className="block"><span className="label">Fin du vote (facultatif)</span><input name="votingEndsAt" type="date" className="field" /></label>
       <button className="btn" disabled={pending}>{pending ? "Ouverture…" : "Ouvrir le scrutin"}</button>
+      <div className="md:col-span-3"><Status state={state} /></div>
+    </form>
+  );
+}
+
+/** Choix direct du livre du mois parmi les livres de la bibliothèque (sans vote). */
+export function ChooseBookForm({ books }: { books: { id: string; title: string; author: string }[] }) {
+  const [state, action, pending] = useActionState<ClubFormState, FormData>(chooseBook, null);
+  return (
+    <form action={action} className="grid gap-4 md:grid-cols-[1fr_1.4fr_auto] md:items-end">
+      <label className="block"><span className="label">Intitulé</span><input name="label" required minLength={3} maxLength={80} className="field" placeholder="Lecture de décembre 2026" /></label>
+      <label className="block"><span className="label">Livre de la bibliothèque</span>
+        <select name="bookId" required defaultValue="" className="field">
+          <option value="" disabled>Choisir un livre…</option>
+          {books.map((b) => <option key={b.id} value={b.id}>{b.title} — {b.author}</option>)}
+        </select>
+      </label>
+      <button className="btn" disabled={pending}>{pending ? "Ouverture…" : "En faire la lecture du mois"}</button>
       <div className="md:col-span-3"><Status state={state} /></div>
     </form>
   );

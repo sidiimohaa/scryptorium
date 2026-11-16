@@ -1,4 +1,5 @@
-import { AddCandidateForm, AddSessionForm, OpenRoundForm } from "@/components/club/ClubForms";
+import { AddCandidateForm, AddSessionForm, ChooseBookForm, OpenRoundForm } from "@/components/club/ClubForms";
+import { getPublishedBooks } from "@/lib/library";
 import { frenchDay, getClub } from "@/lib/club";
 import { archiveRound, closeVoting, removeCandidate, removeSession } from "./actions";
 
@@ -6,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 /** Bureau du club : scrutin du mois, candidats (hors bibliothèque), clôture, séances, archives. */
 export default async function CapitularyBureau() {
-  const club = await getClub();
+  const [club, books] = await Promise.all([getClub(), getPublishedBooks()]);
   if (!club) return <p className="text-muted">Le club nécessite Supabase et les comptes lecteurs.</p>;
   const { active, archives } = club;
   const sorted = active ? [...active.candidates].sort((a, b) => b.votes - a.votes) : [];
@@ -18,13 +19,21 @@ export default async function CapitularyBureau() {
       <header>
         <p className="eyebrow">Salle capitulaire</p>
         <h1 className="display mt-2 text-4xl">Le club de lecture</h1>
-        <p className="mt-2 text-sm text-muted">Vous proposez des livres absents de la bibliothèque ; les membres votent ; le gagnant devient la lecture du mois.</p>
+        <p className="mt-2 text-sm text-muted">Vous proposez des livres absents de la bibliothèque ; les membres votent ; le gagnant devient la lecture du mois. Vous pouvez aussi choisir directement un livre de la bibliothèque, sans vote.</p>
       </header>
 
       {!active && (
         <section className="panel space-y-4 p-6">
           <h2 className="display text-2xl">Ouvrir un scrutin</h2>
           <OpenRoundForm />
+        </section>
+      )}
+
+      {!active && (
+        <section className="panel space-y-4 p-6">
+          <h2 className="display text-2xl">Ou choisir directement le livre du mois</h2>
+          <p className="text-sm text-muted">Sans vote : un livre déjà présent dans la bibliothèque devient la lecture en cours. Vous ajoutez ensuite les séances.</p>
+          <ChooseBookForm books={[...books].sort((a, b) => a.title.localeCompare(b.title, "fr")).map((b) => ({ id: b.id, title: b.title, author: b.author }))} />
         </section>
       )}
 
